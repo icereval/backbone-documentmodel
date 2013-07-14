@@ -2,7 +2,7 @@
 
 A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections with `deep model references` and `event bubbling`.
 
-The DocumentModel is a reference to the projects goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.
+The Document is a reference to the projects goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.
 
 ## Usage
 
@@ -45,6 +45,7 @@ The DocumentModel is a reference to the projects goal of allowing [MongoDB Docum
 // dot syntax, does not create new Models/Collections, merely references them.
 user.set({
   'name.first': 'John',
+  'name.last': 'Doe',
   'name.middle.initial': 'Z'
 });
 
@@ -60,7 +61,10 @@ user.get('name').get('middle').get('initial') // returns 'Z'
 user.set({
   'name': {
     first: 'John',
-    last: 'Doe'
+    last: 'Doe',
+    middle: {
+      initial: 'Z'
+    }
   },
 });
 
@@ -75,15 +79,16 @@ user.set({
 // object syntax
 user.set({
   'addresses': [
-    {city: 'Brooklyn', state: 'NY'},
-    {city: 'Oak Park', state: 'IL'}
+    {city: 'Charlottesville', state: 'VA'},
+    {city: 'Prescott', state: 'AZ'}
   ]
 });
-user.get('addresses[0].state') // returns 'NY'
+user.get('addresses.0.state') // returns 'VA'
+user.get('addresses.1.city') // returns 'Prescott'
 
 // square bracket syntax
 user.set({
-  'addresses[1].state': 'MI'
+  'addresses.1.state': 'MI'
 });
 ```
 

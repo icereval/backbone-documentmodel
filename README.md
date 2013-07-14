@@ -1,6 +1,6 @@
 # Backbone-DocumentModel [![Build Status](https://secure.travis-ci.org/icereval/backbone-documentmodel.png?branch=master)](http://travis-ci.org/icereval/backbone-documentmodel)
 
-A plugin to create whole MongoDB Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections.
+A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections.
 
 ## Usage
 
@@ -33,7 +33,7 @@ A plugin to create whole MongoDB Document structures with nested [Backbone.js](h
     var People = Backbone.DocumentCollection.extend({ ... });
     ```
 
-Best of all, `Backbone.DocumentModel` is designed to be a [backwards-compatible](http://github.com/icereval/backbone-documentmodel/test/), drop-in replacement of `Backbone.Model` & `Backbone.Collection`, so the switch can be made painlessly.
+`Backbone.DocumentModel` is merely a wrapper which sits on top of the existing get/set functionality of `Backbone.Model` & `Backbone.Collection`, so you can use them interchangeably.
 
 ## Nested Attributes
 

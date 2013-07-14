@@ -1,10 +1,12 @@
 # Backbone-DocumentModel [![Build Status](https://secure.travis-ci.org/icereval/backbone-documentmodel.png?branch=master)](http://travis-ci.org/icereval/backbone-documentmodel)
 
-A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections.
+A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections with `deep model references` and `event bubbling`.
+
+The DocumentModel is a reference to the projects goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.
 
 ## Usage
 
-1. Download the latest version [here](https://github.com/icereval/backbone-documentmodel/tags), and add `backbone-documentmodel.js` to your HTML `<head>`, **after** `backbone.js` is included ([tested](http://afeld.github.com/backbone-nested/test/) against [jQuery](http://jquery.com/) v1.7.2, [Underscore](http://documentcloud.github.com/underscore/) v1.3.3 and [Backbone](http://documentcloud.github.com/backbone/) v0.9.2).
+1. Download the latest version [here](https://github.com/icereval/backbone-documentmodel/tags), and add `backbone-documentmodel.js` to your HTML `<head>`, **after** `backbone.js` is included.
 
     ```html
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
@@ -33,30 +35,38 @@ A plugin to create entire Document structures with nested [Backbone.js](http://d
     var People = Backbone.DocumentCollection.extend({ ... });
     ```
 
-`Backbone.DocumentModel` is merely a wrapper which sits on top of the existing get/set functionality of `Backbone.Model` & `Backbone.Collection`, so you can use them interchangeably.
+## Nested Attributes & Document Composition
 
-## Nested Attributes
-
-`get()` and `set()` will work as before, you can now reference deep model names:
+`get()` and `set()` will work as before, you can now reference deep model names and `set()` will also dynamically compose Document data into nested Models & Collections:
 
 ### 1-1
 
 ```javascript
-// dot syntax
+// dot syntax, does not create new Models/Collections, merely references them.
 user.set({
-  'name.first': 'Bob',
-  'name.middle.initial': 'H'
+  'name.first': 'John',
+  'name.middle.initial': 'Z'
 });
-user.get('name.first') // returns 'Bob'
-user.get('name.middle.initial') // returns 'H'
 
-// object syntax
+user.get('name.first') // returns 'John'
+user.get('name.middle.initial') // returns 'Z'
+// -- or reference the Model directly --
+user.get('name').get('first') // returns 'John'
+user.get('name').get('middle').get('initial') // returns 'Z'
+
+// object syntax, will generate entire Model/Collection nested objects,
+// be careful not to overwrite existing objects with dynamic Model/Collection generation,
+// use dot syntax/direct model references.
 user.set({
   'name': {
-    first: 'Barack',
-    last: 'Obama'
-  }
+    first: 'John',
+    last: 'Doe'
+  },
 });
+
+// Expected Model [M]/Collection [C] generation.
+// user [M]
+// - name [M]
 ```
 
 ### 1-N

@@ -57,7 +57,7 @@ user.get('name').get('middle').get('initial') // returns 'Z'
 
 // object syntax, will generate entire Model/Collection nested objects,
 // be careful not to overwrite existing objects with dynamic Model/Collection generation,
-// use dot syntax/direct model references.
+// use dot syntax/direct object references.
 user.set({
   'name': {
     first: 'John',
@@ -68,9 +68,13 @@ user.set({
   },
 });
 
-// Expected Model [M]/Collection [C] generation.
+// Dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
 // user [M]
-// - name [M]
+//   - name [M]
+//     - first [A]
+//     - last [A]
+//     - middle [M]
+//       - initial [A]
 ```
 
 ### 1-N

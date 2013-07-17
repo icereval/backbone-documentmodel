@@ -82,6 +82,10 @@ user.set({
 ```javascript
 // object syntax
 user.set({
+  'name': {
+    'first': 'John',
+    'last': 'Doe'
+  },
   'addresses': [
     {city: 'Charlottesville', state: 'VA'},
     {city: 'Prescott', state: 'AZ'}
@@ -91,9 +95,20 @@ user.get('addresses.0.state') // returns 'VA'
 user.get('addresses.1.city') // returns 'Prescott'
 
 // square bracket syntax
-user.set({
-  'addresses.1.state': 'MI'
-});
+user.set({'addresses.1.state': 'MI');
+
+// Dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
+// user [M]
+//   - name [M]
+//     - first [A]
+//     - last [A]
+//   - addressed [C]
+//     - 0 [M]
+//       - city [A]
+//       - state [A]
+//     - 1 [M]
+//       - city [A]
+//       - state [A]
 ```
 
 ## Events

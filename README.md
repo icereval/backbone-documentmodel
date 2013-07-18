@@ -65,11 +65,13 @@ var UserView = Backbone.View.extend({
         var addressModalView = new AddressModalView({ collection: this.model.get('addresses') });
 
         addressModalView.render();
+        addressModalView.show(); // attach to el
     },
     onEditAddress: function () {
         var addressModalView = new AddressModalView({ model: this.model.get('addresses').at(0) });
 
         addressModalView.render();
+        addressModalView.show(); // attach to el
     },
     onRemoveAddress: function () {
         this.model.get('addresses').remove(0);

@@ -191,15 +191,18 @@ user.set({'addresses.1.state': 'MI');
 `"change"` events can be bound to nested attributes in the same way, and changing nested attributes will fire up the chain:
 
 ```javascript
-// all of these will fire when 'name.middle.initial' is set or changed
-user.on('change', function () { ... });
-user.on('change:name', function () { ... });
-user.on('change:name.middle', function () { ... });
+// add/remove with wildcard
+user.on('add:*', function () { ... });
+user.on('remove:*', function () { ... });
+
+// events fired 'name.middle.initial' is set or changed
+user.get('name').get('middle').on('change:initial', function () { ... });
+user.get('name').on('change:middle.initial', function () { ... });
 user.on('change:name.middle.initial', function () { ... });
 
 // all of these will fire when the first address is added or changed
 user.on('change', function () { ... });
-user.on('change:addresses', function () { ... });
+user.on('change:addresses.*', function () { ... });
 user.on('change:addresses.city', function () { ... });
 ```
 

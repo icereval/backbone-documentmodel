@@ -16,8 +16,8 @@ user.set({
       last: 'Doe'
     },
     addresses: [
-        {type: 'Shipping', city: 'Charlottesville', state: 'VA'},
-        {type: 'Billing', city: 'Prescott', state: 'AZ'}
+        { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
+        { type: 'Billing', city: 'Prescott', state: 'AZ' }
     ]
 });
 ```
@@ -132,7 +132,7 @@ user.get('name').get('middle').get('initial') // returns 'Z'
 // be careful not to overwrite existing objects with dynamic Model/Collection generation,
 // use dot syntax/direct object references.
 user.set({
-  'name': {
+  name: {
     first: 'John',
     last: 'Doe',
     middle: {
@@ -155,14 +155,14 @@ user.set({
 ```javascript
 // object syntax
 user.set({
-  'name': {
-    'first': 'John',
-    'last': 'Doe'
-  },
-  'addresses': [
-    {city: 'Charlottesville', state: 'VA'},
-    {city: 'Prescott', state: 'AZ'}
-  ]
+    name: {
+        first: 'John',
+        last: 'Doe'
+    },
+    addresses: [
+      { city: 'Charlottesville', state: 'VA' },
+      { city: 'Prescott', state: 'AZ' }
+    ]
 });
 user.get('addresses.0.state') // returns 'VA'
 user.get('addresses.1.city') // returns 'Prescott'

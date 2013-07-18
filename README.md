@@ -45,7 +45,7 @@ var UserView = Backbone.View.extend({
         });
     },
     render: function () {
-        var addressModalView = new AddressModalView({modal: this.get('addresses').at(0) });
+        var addressModalView = new AddressModalView({ model: this.get('addresses').at(0) });
 
         addressModalView.render();
         addressModalView.show();

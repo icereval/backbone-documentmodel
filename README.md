@@ -222,10 +222,3 @@ user.on('remove:*', function () { ... });
 #### 1.0.0
 
 Initial release!
-
-## Contributing
-
-Pull requests are more than welcome - please add tests, which can be run by opening test/index.html.  They can also be run from the command-line (requires [PhantomJS](http://phantomjs.org/)):
-
-    $ npm install
-    $ grunt

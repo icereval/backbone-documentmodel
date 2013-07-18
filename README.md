@@ -70,7 +70,7 @@ var UserView = Backbone.View.extend({
         var addressModalView = new AddressModalView({ model: this.model.get('addresses').at(0) });
 
         addressModalView.render();
-    }
+    },
     onRemoveAddress: function () {
         this.model.get('addresses').remove(0);
     }

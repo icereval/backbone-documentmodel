@@ -62,12 +62,12 @@ var UserView = Backbone.View.extend({
         }, this);
     },
     onAddAddress: function () {
-        var addressModalView = new AddressModalView({ collection: this.get('addresses') });
+        var addressModalView = new AddressModalView({ collection: this.model.get('addresses') });
 
         addressModalView.render();
     },
     onEditAddress: function () {
-        var addressModalView = new AddressModalView({ model: this.get('addresses').at(0) });
+        var addressModalView = new AddressModalView({ model: this.model.get('addresses').at(0) });
 
         addressModalView.render();
     }

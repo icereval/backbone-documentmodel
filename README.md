@@ -53,6 +53,10 @@ var UserView = Backbone.View.extend({
             alert('address added!'); // or save...
         }, this);
 
+        this.model.on('remove:addresses', function () {
+            alert('address removed!'); // or save...
+        }, this);
+
         this.model.on('change:addresses.*', function () {
             alert('address changed!'); // or save...
         }, this);
@@ -66,6 +70,9 @@ var UserView = Backbone.View.extend({
         var addressModalView = new AddressModalView({ model: this.get('addresses').at(0) });
 
         addressModalView.render();
+    }
+    onRemoveAddress: function () {
+        this.model.get('addresses').remove(0);
     }
 });
 ```

@@ -192,16 +192,15 @@ user.set({'addresses.1.state': 'MI');
 
 ```javascript
 // all of these will fire when 'name.middle.initial' is set or changed
-user.bind('change', function(model, newVal){ ... });
-user.bind('change:name', function(model, newName){ ... });
-user.bind('change:name.middle', function(model, newMiddleName){ ... });
-user.bind('change:name.middle.initial', function(model, newInitial){ ... });
+user.on('change', function () { ... });
+user.on('change:name', function () { ... });
+user.on('change:name.middle', function () { ... });
+user.on('change:name.middle.initial', function () { ... });
 
 // all of these will fire when the first address is added or changed
-user.bind('change', function(model, newVal){ ... });
-user.bind('change:addresses', function(model, addrs){ ... });
-user.bind('change:addresses[0]', function(model, newAddr){ ... });
-user.bind('change:addresses[0].city', function(model, newCity){ ... });
+user.on('change', function () { ... });
+user.on('change:addresses', function () { ... });
+user.on('change:addresses.city', function () { ... });
 ```
 
 ### "add" and "remove"

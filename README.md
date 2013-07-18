@@ -34,14 +34,14 @@ var AddressModalView = Backbone.View.extend({
     },
     onSave: function () {
         if (this.model) {
-            this.model.set('type', this.$el.find('type').val());
-            this.model.set('city', this.$el.find('city').val());
-            this.model.set('state', this.$el.find('state').val());
+            this.model.set('type', this.$el.find('.type').val());
+            this.model.set('city', this.$el.find('.city').val());
+            this.model.set('state', this.$el.find('.state').val());
         } else {
             this.collection.push({
-                type: this.$el.find('type').val(),
-                city: this.$el.find('city').val(),
-                state: this.$el.find('state').val()
+                type: this.$el.find('.type').val(),
+                city: this.$el.find('.city').val(),
+                state: this.$el.find('.state').val()
             });
         }
     }

@@ -197,9 +197,9 @@ user.get('name').on('change:middle.initial', function () { ... });
 user.on('change:name.middle.initial', function () { ... });
 
 // all of these will fire when the first address is added or changed
-user.on('change', function () { ... });
-user.on('change:addresses.*', function () { ... });
 user.on('change:addresses.city', function () { ... });
+user.on('change:addresses.*', function () { ... });
+user.on('change', function () { ... });
 ```
 
 ### "add" and "remove"
@@ -207,8 +207,11 @@ user.on('change:addresses.city', function () { ... });
 Additionally, nested arrays fire `"add"` and `"remove"` events:
 
 ```javascript
-// add/remove with wildcard (technically all names are regex evaluations)
+// add/remove with wildcard (all names are regex evaluations)
+user.on('add:addresses', function () { ... });
 user.on('add:*', function () { ... });
+
+user.on('remove:addresses', function () { ... });
 user.on('remove:*', function () { ... });
 ```
 

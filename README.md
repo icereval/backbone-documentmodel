@@ -50,11 +50,11 @@ var UserView = Backbone.View.extend({
     initialize: function () {
         this.model.on('add:addresses', function () {
             alert('address added!'); // or save...
-        });
+        }, this);
 
         this.model.on('change:addresses.*', function () {
             alert('address changed!'); // or save...
-        });
+        }, this);
     },
     onAddAddress: function () {
         var addressModalView = new AddressModalView({ collection: this.get('addresses') });
@@ -205,67 +205,7 @@ user.bind('add:addresses', function(model, newAddr){ ... });
 user.bind('remove:addresses', function(model, oldAddr){ ... });
 ```
 
-## Special Methods
-
-### add()
-
-Acts like `set()`, but appends the item to the nested array.  For example:
-
-```javascript
-user.get('addresses').length; //=> 2
-user.add('addresses', {
-  city: 'Seattle',
-  state: 'WA'
-});
-user.get('addresses').length; //=> 3
-```
-
-### remove()
-
-Acts like `unset()`, but if the unset item is an element in a nested array, the array will be compacted.  For example:
-
-```javascript
-user.get('addresses').length; //=> 2
-user.remove('addresses[0]');
-user.get('addresses').length; //=> 1
-```
-
 ## Changelog
-
-#### HEAD ([diff](https://github.com/afeld/backbone-nested/compare/v1.1.2...master?w=1))
-
-* fix `remove()` not firing `'remove'` event when last element of array is removed (thanks @Kmandr)
-* fix `clear()` and set nested attributes on `changedAttributes()` (thanks @isakb)
-* `'change'` events will no longer fire if new value matches the old
-
-#### 1.1.2 ([diff](https://github.com/afeld/backbone-nested/compare/v1.1.1...v1.1.2?w=1))
-
-* `changedAttributes()` should include the nested attribute paths
-* remove warnings when retrieving nested objects - more of a nuisance than a convenience
-
-#### 1.1.1 ([diff](https://github.com/afeld/backbone-nested/compare/v1.1.0...v1.1.1?w=1))
-
-* fixed `remove()` to not insert array back into itself
-* upgraded test suite to Backbone 0.9.2
-
-#### 1.1.0 ([diff](https://github.com/afeld/backbone-nested/compare/v1.0.3...v1.1.0?w=1))
-
-* Backbone 0.9.1 compatibiity
-* fire 'remove' event from remove()
-* added add() method
-* added [demo pages](https://github.com/afeld/backbone-nested/tree/master/demo)
-
-#### 1.0.3 ([diff](https://github.com/afeld/backbone-nested/compare/v1.0.2...v1.0.3?w=1))
-
-* fixed `toJSON()` ([p3drosola](https://github.com/afeld/backbone-nested/pull/9))
-
-#### 1.0.2 ([diff](https://github.com/afeld/backbone-nested/compare/v1.0.1...v1.0.2?w=1))
-
-* added option to silence `get()` warnings for non-leaf attributes
-
-#### 1.0.1 ([diff](https://github.com/afeld/backbone-nested/compare/v1.0.0...v1.0.1?w=1))
-
-* header and documentation fixes
 
 #### 1.0.0
 

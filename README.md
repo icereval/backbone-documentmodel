@@ -2,7 +2,56 @@
 
 A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections with `deep model references` and `event bubbling`.
 
-The Document is a reference to the projects goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.
+The Document is simply a reference to the projects goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.
+
+## Another Backbone.js plugin...
+
+After working with document objects we kept running into a situation where we wanted to pass Model/Collection objects to our nested Backbone.Views, however this proved troublesome to keep track of changes made within those Views.
+
+```javascript
+// Setup our Document Model object.
+user.set({
+    name: {
+      first: 'John',
+      last: 'Doe'
+    },
+    addresses: [
+        {type: 'Shipping', city: 'Charlottesville', state: 'VA'},
+        {type: 'Billing', city: 'Prescott', state: 'AZ'}
+    ]
+});
+```
+
+When making a Backbone.View its common to pass the Model/Collection, and it would be best practice to pass only the specific Model/Collection the control needed.
+
+```javascript
+var AddressModalView = Backbone.View.extend({
+    events: {
+        'click .save': 'onSave'
+    },
+    render: function () {
+
+    },
+    onSave: function () {
+        this.model.set('city') = this.$el.find('city').val()
+        this.model.set('state') = this.$el.find('state').val()
+    }
+});
+
+var UserView = Backbone.View.extend({
+    initialize: function () {
+        this.model.on('change:addresses.*', function () {
+            alert('address changed!'); // or save...
+        });
+    },
+    render: function () {
+        var addressModalView = new AddressModalView({modal: this.get('addresses').at(0) });
+
+        addressModalView.render();
+        addressModalView.show();
+    }
+});
+```
 
 ## Usage
 
@@ -102,7 +151,7 @@ user.set({'addresses.1.state': 'MI');
 //   - name [M]
 //     - first [A]
 //     - last [A]
-//   - addressed [C]
+//   - addresses [C]
 //     - 0 [M]
 //       - city [A]
 //       - state [A]

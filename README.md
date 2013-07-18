@@ -207,7 +207,7 @@ user.on('change', function () { ... });
 Additionally, nested arrays fire `"add"` and `"remove"` events:
 
 ```javascript
-// add/remove with wildcard (all names are regex evaluations)
+// add/remove (all names are regex evaluations)
 user.on('add:addresses', function () { ... });
 user.on('add:*', function () { ... });
 

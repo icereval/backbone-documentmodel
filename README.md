@@ -199,7 +199,7 @@ user.on('change:name.middle.initial', function () { ... });
 // all of these will fire when the first address is added or changed
 user.on('change:addresses.city', function () { ... });
 user.on('change:addresses.*', function () { ... });
-user.on('change', function () { ... });
+user.on('change:*', function () { ... });
 ```
 
 ### "add" and "remove"

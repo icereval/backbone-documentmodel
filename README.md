@@ -22,7 +22,7 @@ user.set({
 });
 ```
 
-When making a new Backbone.View its `very common` to pass the Model/Collection, and it would be best practice to pass only the specific Model/Collection the control needed.
+When making a new Backbone.View its common to pass in a Model or Collection, and it would be best practice to pass only the specific Model/Collection that control needed.
 
 ```javascript
 var AddressModalView = Backbone.View.extend({

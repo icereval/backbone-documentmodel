@@ -30,25 +30,40 @@ var AddressModalView = Backbone.View.extend({
         'click .save': 'onSave'
     },
     render: function () {
-
+        // code to render the template and output el for the dom.
     },
     onSave: function () {
-        this.model.set('city') = this.$el.find('city').val()
-        this.model.set('state') = this.$el.find('state').val()
+        if (this.model) {
+            this.model.set('city') = this.$el.find('city').val()
+            this.model.set('state') = this.$el.find('state').val()
+        } else {
+            this.collection.push({
+                city: this.$el.find('city').val(),
+                state: this.$el.find('state').val()
+            });
+        }
     }
 });
 
 var UserView = Backbone.View.extend({
     initialize: function () {
+        this.model.on('add:addresses', function () {
+            alert('address added!'); // or save...
+        });
+
         this.model.on('change:addresses.*', function () {
             alert('address changed!'); // or save...
         });
     },
-    render: function () {
+    onAddAddress: function () {
+        var addressModalView = new AddressModalView({ collection: this.get('addresses') });
+
+        addressModalView.render();
+    },
+    onEditAddress: function () {
         var addressModalView = new AddressModalView({ model: this.get('addresses').at(0) });
 
         addressModalView.render();
-        addressModalView.show();
     }
 });
 ```

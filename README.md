@@ -34,6 +34,7 @@ var AddressModalView = Backbone.View.extend({
     },
     onSave: function () {
         if (this.model) {
+            this.model.set('type') = this.$el.find('type').val()
             this.model.set('city') = this.$el.find('city').val()
             this.model.set('state') = this.$el.find('state').val()
         } else {

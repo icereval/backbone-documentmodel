@@ -8,76 +8,76 @@ The Document is simply a reference to the project's goal of allowing [MongoDB Do
 
 After working with document objects we kept running into a situation where we wanted to pass Model/Collection objects to our nested Backbone.Views, however this proved troublesome to keep track of changes made within those Views.
 
-    ```javascript
-    // Setup our Document Model object.
-    user.set({
-        name: {
-          first: 'John',
-          last: 'Doe'
-        },
-        addresses: [
-            { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
-            { type: 'Billing', city: 'Prescott', state: 'AZ' }
-        ]
-    });
-    ```
+```javascript
+// Setup our Document Model object.
+user.set({
+    name: {
+      first: 'John',
+      last: 'Doe'
+    },
+    addresses: [
+        { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
+        { type: 'Billing', city: 'Prescott', state: 'AZ' }
+    ]
+});
+```
 
-    When making a new Backbone.View its common to pass in a Model or Collection, and it would be best practice to pass only the specific Model/Collection that the control needed.
+When making a new Backbone.View its common to pass in a Model or Collection, and it would be best practice to pass only the specific Model/Collection that the control needed.
 
-    ```javascript
-    var AddressModalView = Backbone.View.extend({
-        events: {
-            'click .save': 'onSave'
-        },
-        render: function () {
-            // code to render the template and output el for the dom.
-        },
-        onSave: function () {
-            if (this.model) {
-                this.model.set('type', this.$el.find('.type').val());
-                this.model.set('city', this.$el.find('.city').val());
-                this.model.set('state', this.$el.find('.state').val());
-            } else {
-                this.collection.push({
-                    type: this.$el.find('.type').val(),
-                    city: this.$el.find('.city').val(),
-                    state: this.$el.find('.state').val()
-                });
-            }
+```javascript
+var AddressModalView = Backbone.View.extend({
+    events: {
+        'click .save': 'onSave'
+    },
+    render: function () {
+        // code to render the template and output el for the dom.
+    },
+    onSave: function () {
+        if (this.model) {
+            this.model.set('type', this.$el.find('.type').val());
+            this.model.set('city', this.$el.find('.city').val());
+            this.model.set('state', this.$el.find('.state').val());
+        } else {
+            this.collection.push({
+                type: this.$el.find('.type').val(),
+                city: this.$el.find('.city').val(),
+                state: this.$el.find('.state').val()
+            });
         }
-    });
+    }
+});
 
-    var UserView = Backbone.View.extend({
-        initialize: function () {
-            this.model.on('add:addresses', function () {
-                alert('address added!'); // or save...
-            }, this);
+var UserView = Backbone.View.extend({
+    initialize: function () {
+        this.model.on('add:addresses', function () {
+            alert('address added!'); // or save...
+        }, this);
 
-            this.model.on('remove:addresses', function () {
-                alert('address removed!'); // or save...
-            }, this);
+        this.model.on('remove:addresses', function () {
+            alert('address removed!'); // or save...
+        }, this);
 
-            this.model.on('change:addresses.*', function () {
-                alert('address changed!'); // or save...
-            }, this);
-        },
-        onAddAddress: function () {
-            var addressModalView = new AddressModalView({ collection: this.model.get('addresses') });
+        this.model.on('change:addresses.*', function () {
+            alert('address changed!'); // or save...
+        }, this);
+    },
+    onAddAddress: function () {
+        var addressModalView = new AddressModalView({ collection: this.model.get('addresses') });
 
-            addressModalView.render();
-            addressModalView.show(); // attach to el
-        },
-        onEditAddress: function () {
-            var addressModalView = new AddressModalView({ model: this.model.get('addresses').at(0) });
+        addressModalView.render();
+        addressModalView.show(); // attach to el
+    },
+    onEditAddress: function () {
+        var addressModalView = new AddressModalView({ model: this.model.get('addresses').at(0) });
 
-            addressModalView.render();
-            addressModalView.show(); // attach to el
-        },
-        onRemoveAddress: function () {
-            this.model.get('addresses').remove(0);
-        }
-    });
-    ```
+        addressModalView.render();
+        addressModalView.show(); // attach to el
+    },
+    onRemoveAddress: function () {
+        this.model.get('addresses').remove(0);
+    }
+});
+```
 
 ## Usage
 

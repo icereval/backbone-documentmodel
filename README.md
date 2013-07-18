@@ -191,10 +191,6 @@ user.set({'addresses.1.state': 'MI');
 `"change"` events can be bound to nested attributes in the same way, and changing nested attributes will fire up the chain:
 
 ```javascript
-// add/remove with wildcard
-user.on('add:*', function () { ... });
-user.on('remove:*', function () { ... });
-
 // events fired 'name.middle.initial' is set or changed
 user.get('name').get('middle').on('change:initial', function () { ... });
 user.get('name').on('change:middle.initial', function () { ... });
@@ -211,8 +207,9 @@ user.on('change:addresses.city', function () { ... });
 Additionally, nested arrays fire `"add"` and `"remove"` events:
 
 ```javascript
-user.bind('add:addresses', function(model, newAddr){ ... });
-user.bind('remove:addresses', function(model, oldAddr){ ... });
+// add/remove with wildcard (technically all names are regex evaluations)
+user.on('add:*', function () { ... });
+user.on('remove:*', function () { ... });
 ```
 
 ## Changelog

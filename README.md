@@ -2,7 +2,7 @@
 
 A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections with `deep model` references and `event bubbling`.
 
-The Document is simply a reference to the projects goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.
+The Document is simply a reference to the project's goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.
 
 ## Another Backbone.js plugin...
 
@@ -22,7 +22,7 @@ user.set({
 });
 ```
 
-When making a new Backbone.View its common to pass in a Model or Collection, and it would be best practice to pass only the specific Model/Collection that control needed.
+When making a new Backbone.View its common to pass in a Model or Collection, and it would be best practice to pass only the specific Model/Collection that the control needed.
 
 ```javascript
 var AddressModalView = Backbone.View.extend({
@@ -38,6 +38,7 @@ var AddressModalView = Backbone.View.extend({
             this.model.set('state') = this.$el.find('state').val()
         } else {
             this.collection.push({
+                type: this.$el.find('type').val(),
                 city: this.$el.find('city').val(),
                 state: this.$el.find('state').val()
             });

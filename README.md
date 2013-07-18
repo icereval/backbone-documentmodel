@@ -217,6 +217,7 @@ user.on('remove:addresses', function () { ... });
 user.on('remove:*', function () { ... });
 ```
 
+
 ## Changelog
 
 #### 1.0.0

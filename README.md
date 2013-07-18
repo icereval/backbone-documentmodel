@@ -198,7 +198,7 @@ user.get('name').get('middle').on('change:initial', function () { ... });
 user.get('name').on('change:middle.initial', function () { ... });
 user.on('change:name.middle.initial', function () { ... });
 
-// all of these will fire when the first address is added or changed
+// all of these will fire when any address is added or changed
 user.on('change:addresses.city', function () { ... });
 user.on('change:addresses.*', function () { ... });
 user.on('change:*', function () { ... });

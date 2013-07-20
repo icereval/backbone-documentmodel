@@ -170,7 +170,7 @@ user.get('addresses.0.state') // returns 'VA'
 user.get('addresses.1.city') // returns 'Prescott'
 
 // square bracket syntax
-user.set({'addresses.1.state': 'MI');
+user.set({ 'addresses.1.state': 'MI' });
 
 // Dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
 // user [M]

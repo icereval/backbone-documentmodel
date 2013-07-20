@@ -81,7 +81,7 @@ var UserView = Backbone.View.extend({
 
 ## Usage
 
-1. Download the latest version [here](https://github.com/icereval/backbone-documentmodel/tags), and add `backbone-documentmodel.js` to your HTML `<head>`, **after** `backbone.js` is included.
+1. Download the latest version [here](https://github.com/icereval/backbone-documentmodel), and add `backbone-documentmodel.js` to your HTML `<head>`, **after** `backbone.js` is included.
 
     ```html
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>

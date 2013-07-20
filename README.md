@@ -1,10 +1,87 @@
-# Backbone-DocumentModel [![Build Status](https://secure.travis-ci.org/icereval/backbone-documentmodel.png?branch=master)](http://travis-ci.org/icereval/backbone-documentmodel)
+# Backbone-DocumentModel
 
-A plugin to create whole MongoDB Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections.
+A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections with `deep model` references and `event bubbling`.
+
+The Document is simply a reference to the project's goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.
+
+## Another Backbone.js plugin...
+
+After working with document objects we kept running into a situation where we wanted to pass Model/Collection objects to our nested Backbone.Views, however this proved troublesome to keep track of changes made within those Views.
+
+```javascript
+// Setup our Document Model object.
+user.set({
+    name: {
+      first: 'John',
+      last: 'Doe'
+    },
+    addresses: [
+        { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
+        { type: 'Billing', city: 'Prescott', state: 'AZ' }
+    ]
+});
+```
+
+When making a new Backbone.View its common to pass in a Model or Collection, and it would be best practice to pass only the specific Model/Collection that the control needed.
+
+```javascript
+var AddressModalView = Backbone.View.extend({
+    events: {
+        'click .save': 'onSave'
+    },
+    render: function () {
+        // code to render the template and output el for the dom.
+    },
+    onSave: function () {
+        if (this.model) {
+            this.model.set('type', this.$el.find('.type').val());
+            this.model.set('city', this.$el.find('.city').val());
+            this.model.set('state', this.$el.find('.state').val());
+        } else {
+            this.collection.add({
+                type: this.$el.find('.type').val(),
+                city: this.$el.find('.city').val(),
+                state: this.$el.find('.state').val()
+            });
+        }
+    }
+});
+
+var UserView = Backbone.View.extend({
+    initialize: function () {
+        this.model.on('add:addresses', function () {
+            alert('address added!'); // or save...
+        }, this);
+
+        this.model.on('remove:addresses', function () {
+            alert('address removed!'); // or save...
+        }, this);
+
+        this.model.on('change:addresses.*', function () {
+            alert('address changed!'); // or save...
+        }, this);
+    },
+    onAddAddress: function () {
+        var addressModalView = new AddressModalView({ collection: this.model.get('addresses') });
+
+        addressModalView.render();
+        addressModalView.show(); // attach to el
+    },
+    onEditAddress: function () {
+        var addressModalView = new AddressModalView({ model: this.model.get('addresses').at(0) });
+
+        addressModalView.render();
+        addressModalView.show(); // attach to el
+    },
+    onRemoveAddress: function () {
+        this.model.get('addresses').remove(0);
+    }
+});
+```
 
 ## Usage
 
-1. Download the latest version [here](https://github.com/icereval/backbone-documentmodel/tags), and add `backbone-documentmodel.js` to your HTML `<head>`, **after** `backbone.js` is included ([tested](http://afeld.github.com/backbone-nested/test/) against [jQuery](http://jquery.com/) v1.7.2, [Underscore](http://documentcloud.github.com/underscore/) v1.3.3 and [Backbone](http://documentcloud.github.com/backbone/) v0.9.2).
+1. Download the latest version [here](https://github.com/icereval/backbone-documentmodel/tags), and add `backbone-documentmodel.js` to your HTML `<head>`, **after** `backbone.js` is included.
 
     ```html
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
@@ -33,30 +110,46 @@ A plugin to create whole MongoDB Document structures with nested [Backbone.js](h
     var People = Backbone.DocumentCollection.extend({ ... });
     ```
 
-Best of all, `Backbone.DocumentModel` is designed to be a [backwards-compatible](http://github.com/icereval/backbone-documentmodel/test/), drop-in replacement of `Backbone.Model` & `Backbone.Collection`, so the switch can be made painlessly.
+## Nested Attributes & Document Composition
 
-## Nested Attributes
-
-`get()` and `set()` will work as before, you can now reference deep model names:
+`get()` and `set()` will work as before, you can now reference deep model names and `set()` will also dynamically compose Document data into nested Models & Collections:
 
 ### 1-1
 
 ```javascript
-// dot syntax
+// dot syntax, does not create new Models/Collections, merely references them.
 user.set({
-  'name.first': 'Bob',
-  'name.middle.initial': 'H'
+  'name.first': 'John',
+  'name.last': 'Doe',
+  'name.middle.initial': 'Z'
 });
-user.get('name.first') // returns 'Bob'
-user.get('name.middle.initial') // returns 'H'
 
-// object syntax
+user.get('name.first') // returns 'John'
+user.get('name.middle.initial') // returns 'Z'
+// -- or reference the Model directly --
+user.get('name').get('first') // returns 'John'
+user.get('name').get('middle').get('initial') // returns 'Z'
+
+// object syntax, will generate entire Model/Collection nested objects,
+// be careful not to overwrite existing objects with dynamic Model/Collection generation,
+// use dot syntax/direct object references.
 user.set({
-  'name': {
-    first: 'Barack',
-    last: 'Obama'
-  }
+  name: {
+    first: 'John',
+    last: 'Doe',
+    middle: {
+      initial: 'Z'
+    }
+  },
 });
+
+// Dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
+// user [M]
+//   - name [M]
+//     - first [A]
+//     - last [A]
+//     - middle [M]
+//       - initial [A]
 ```
 
 ### 1-N
@@ -64,17 +157,33 @@ user.set({
 ```javascript
 // object syntax
 user.set({
-  'addresses': [
-    {city: 'Brooklyn', state: 'NY'},
-    {city: 'Oak Park', state: 'IL'}
-  ]
+    name: {
+        first: 'John',
+        last: 'Doe'
+    },
+    addresses: [
+      { city: 'Charlottesville', state: 'VA' },
+      { city: 'Prescott', state: 'AZ' }
+    ]
 });
-user.get('addresses[0].state') // returns 'NY'
+user.get('addresses.0.state') // returns 'VA'
+user.get('addresses.1.city') // returns 'Prescott'
 
 // square bracket syntax
-user.set({
-  'addresses[1].state': 'MI'
-});
+user.set({'addresses.1.state': 'MI');
+
+// Dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
+// user [M]
+//   - name [M]
+//     - first [A]
+//     - last [A]
+//   - addresses [C]
+//     - 0 [M]
+//       - city [A]
+//       - state [A]
+//     - 1 [M]
+//       - city [A]
+//       - state [A]
 ```
 
 ## Events
@@ -84,17 +193,15 @@ user.set({
 `"change"` events can be bound to nested attributes in the same way, and changing nested attributes will fire up the chain:
 
 ```javascript
-// all of these will fire when 'name.middle.initial' is set or changed
-user.bind('change', function(model, newVal){ ... });
-user.bind('change:name', function(model, newName){ ... });
-user.bind('change:name.middle', function(model, newMiddleName){ ... });
-user.bind('change:name.middle.initial', function(model, newInitial){ ... });
+// events fired 'name.middle.initial' is set or changed
+user.get('name').get('middle').on('change:initial', function () { ... });
+user.get('name').on('change:middle.initial', function () { ... });
+user.on('change:name.middle.initial', function () { ... });
 
-// all of these will fire when the first address is added or changed
-user.bind('change', function(model, newVal){ ... });
-user.bind('change:addresses', function(model, addrs){ ... });
-user.bind('change:addresses[0]', function(model, newAddr){ ... });
-user.bind('change:addresses[0].city', function(model, newCity){ ... });
+// all of these will fire when any address is added or changed
+user.on('change:addresses.city', function () { ... });
+user.on('change:addresses.*', function () { ... });
+user.on('change:*', function () { ... });
 ```
 
 ### "add" and "remove"
@@ -102,79 +209,16 @@ user.bind('change:addresses[0].city', function(model, newCity){ ... });
 Additionally, nested arrays fire `"add"` and `"remove"` events:
 
 ```javascript
-user.bind('add:addresses', function(model, newAddr){ ... });
-user.bind('remove:addresses', function(model, oldAddr){ ... });
-```
+// add/remove (all names are regex evaluations)
+user.on('add:addresses', function () { ... });
+user.on('add:*', function () { ... });
 
-## Special Methods
-
-### add()
-
-Acts like `set()`, but appends the item to the nested array.  For example:
-
-```javascript
-user.get('addresses').length; //=> 2
-user.add('addresses', {
-  city: 'Seattle',
-  state: 'WA'
-});
-user.get('addresses').length; //=> 3
-```
-
-### remove()
-
-Acts like `unset()`, but if the unset item is an element in a nested array, the array will be compacted.  For example:
-
-```javascript
-user.get('addresses').length; //=> 2
-user.remove('addresses[0]');
-user.get('addresses').length; //=> 1
+user.on('remove:addresses', function () { ... });
+user.on('remove:*', function () { ... });
 ```
 
 ## Changelog
 
-#### HEAD ([diff](https://github.com/afeld/backbone-nested/compare/v1.1.2...master?w=1))
-
-* fix `remove()` not firing `'remove'` event when last element of array is removed (thanks @Kmandr)
-* fix `clear()` and set nested attributes on `changedAttributes()` (thanks @isakb)
-* `'change'` events will no longer fire if new value matches the old
-
-#### 1.1.2 ([diff](https://github.com/afeld/backbone-nested/compare/v1.1.1...v1.1.2?w=1))
-
-* `changedAttributes()` should include the nested attribute paths
-* remove warnings when retrieving nested objects - more of a nuisance than a convenience
-
-#### 1.1.1 ([diff](https://github.com/afeld/backbone-nested/compare/v1.1.0...v1.1.1?w=1))
-
-* fixed `remove()` to not insert array back into itself
-* upgraded test suite to Backbone 0.9.2
-
-#### 1.1.0 ([diff](https://github.com/afeld/backbone-nested/compare/v1.0.3...v1.1.0?w=1))
-
-* Backbone 0.9.1 compatibiity
-* fire 'remove' event from remove()
-* added add() method
-* added [demo pages](https://github.com/afeld/backbone-nested/tree/master/demo)
-
-#### 1.0.3 ([diff](https://github.com/afeld/backbone-nested/compare/v1.0.2...v1.0.3?w=1))
-
-* fixed `toJSON()` ([p3drosola](https://github.com/afeld/backbone-nested/pull/9))
-
-#### 1.0.2 ([diff](https://github.com/afeld/backbone-nested/compare/v1.0.1...v1.0.2?w=1))
-
-* added option to silence `get()` warnings for non-leaf attributes
-
-#### 1.0.1 ([diff](https://github.com/afeld/backbone-nested/compare/v1.0.0...v1.0.1?w=1))
-
-* header and documentation fixes
-
 #### 1.0.0
 
 Initial release!
-
-## Contributing
-
-Pull requests are more than welcome - please add tests, which can be run by opening test/index.html.  They can also be run from the command-line (requires [PhantomJS](http://phantomjs.org/)):
-
-    $ npm install
-    $ grunt

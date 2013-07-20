@@ -219,6 +219,10 @@ user.on('remove:*', function () { ... });
 
 ## Changelog
 
-#### 1.0.0
+#### 0.5.1
+
+Comment changes!
+
+#### 0.5.0
 
 Initial release!

@@ -12,8 +12,8 @@ After working with document objects we kept running into a situation where we wa
 // Setup our Document Model object.
 user.set({
     name: {
-      first: 'John',
-      last: 'Doe'
+        first: 'John',
+        last: 'Doe'
     },
     addresses: [
         { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
@@ -119,9 +119,9 @@ var UserView = Backbone.View.extend({
 ```javascript
 // dot syntax, does not create new Models/Collections, merely references them.
 user.set({
-  'name.first': 'John',
-  'name.last': 'Doe',
-  'name.middle.initial': 'Z'
+    'name.first': 'John',
+    'name.last': 'Doe',
+    'name.middle.initial': 'Z'
 });
 
 user.get('name.first') // returns 'John'
@@ -134,13 +134,13 @@ user.get('name').get('middle').get('initial') // returns 'Z'
 // be careful not to overwrite existing objects with dynamic Model/Collection generation,
 // use dot syntax/direct object references.
 user.set({
-  name: {
-    first: 'John',
-    last: 'Doe',
-    middle: {
-      initial: 'Z'
-    }
-  },
+    name: {
+        first: 'John',
+        last: 'Doe',
+        middle: {
+            initial: 'Z'
+        }
+    },
 });
 
 // Dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
@@ -162,8 +162,8 @@ user.set({
         last: 'Doe'
     },
     addresses: [
-      { city: 'Charlottesville', state: 'VA' },
-      { city: 'Prescott', state: 'AZ' }
+        { city: 'Charlottesville', state: 'VA' },
+        { city: 'Prescott', state: 'AZ' }
     ]
 });
 user.get('addresses.0.state') // returns 'VA'

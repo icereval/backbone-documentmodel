@@ -1,4 +1,4 @@
-# Backbone-DocumentModel
+# Backbone-DocumentModel [![Build Status](https://secure.travis-ci.org/icereval/backbone-documentmodel.png?branch=master)](https://travis-ci.org/icereval/backbone-documentmodel)
 
 A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections with `deep model` references and `event bubbling`.
 

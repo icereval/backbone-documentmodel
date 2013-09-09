@@ -219,6 +219,10 @@ user.on('remove:*', function () { ... });
 
 ## Changelog
 
+#### 0.6.0
+
+Added minimally altered backbone model/collection unit tests.
+
 #### 0.5.x
 
 Initial release!

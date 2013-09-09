@@ -74,7 +74,7 @@ var UserView = Backbone.View.extend({
         addressModalView.show(); // attach to el
     },
     onRemoveAddress: function () {
-        this.model.get('addresses').remove(0);
+        this.model.get('addresses').remove(this.model.get('addresses.0'));
     }
 });
 ```
@@ -116,23 +116,12 @@ var UserView = Backbone.View.extend({
 
 ### 1-1
 
+set()
+
 ```javascript
-// dot syntax, does not create new Models/Collections, merely references them.
-user.set({
-    'name.first': 'John',
-    'name.last': 'Doe',
-    'name.middle.initial': 'Z'
-});
-
-user.get('name.first') // returns 'John'
-user.get('name.middle.initial') // returns 'Z'
-// -- or reference the Model directly --
-user.get('name').get('first') // returns 'John'
-user.get('name').get('middle').get('initial') // returns 'Z'
-
-// object syntax, will generate entire Model/Collection nested objects,
-// be careful not to overwrite existing objects with dynamic Model/Collection generation,
-// use dot syntax/direct object references.
+// object syntax - will generate entire Model/Collection nested objects.
+// NOTE: be careful not to overwrite existing Collections as a set Array
+//       will overwrite an existing Collection.
 user.set({
     name: {
         first: 'John',
@@ -140,10 +129,24 @@ user.set({
         middle: {
             initial: 'Z'
         }
-    },
+    }
 });
 
-// Dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
+user.get('name').get('middle').set('initial', 'Z');
+
+// dot syntax - will create new Models and properties (not Collections).
+// NOTE: dynamic Collection composition is not supported on array indicies,
+//       however you can update an existing array item.
+//       ex: 'addresses.0.city': 'Charlottesville'
+user.set({
+    'name.first': 'John',
+    'name.last': 'Doe',
+    'name.middle.initial': 'Z'
+});
+
+user.get('name').set({ 'middle.initial': 'Z' });
+
+// dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
 // user [M]
 //   - name [M]
 //     - first [A]
@@ -152,31 +155,54 @@ user.set({
 //       - initial [A]
 ```
 
-### 1-N
+get()
 
 ```javascript
-// object syntax
+// dot syntax
+user.get('name.first'); // returns 'John'
+user.get('name.middle.initial'); // returns 'Z'
+user.get('name').get('middle.initial'); // returns 'Z'
+
+// direct
+user.get('name').get('first'); // returns 'John'
+user.get('name').get('middle').get('initial'); // returns 'Z'
+```
+
+### 1-N
+
+set()
+
+```javascript
+// object syntax - will generate entire Model/Collection nested objects.
+// NOTE: be careful not to overwrite existing Collections as a set Array
+//       will overwrite an existing Collection.
 user.set({
-    name: {
-        first: 'John',
-        last: 'Doe'
-    },
     addresses: [
         { city: 'Charlottesville', state: 'VA' },
         { city: 'Prescott', state: 'AZ' }
     ]
 });
-user.get('addresses.0.state') // returns 'VA'
-user.get('addresses.1.city') // returns 'Prescott'
 
-// square bracket syntax
-user.set({ 'addresses.1.state': 'MI' });
+user.get('addresses').at('1').set('state', 'VA');
+user.get('addresses').at('1').set({ 'state': 'VA' });
+user.get('addresses').at('1').set([
+    { state: 'VA', city: 'Charlottesville' },
+    { state: 'AZ' }
+]);
 
-// Dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
+// dot syntax - will update existing Collection items, non-existing items are ignored.
+// NOTE: dynamic Collection composition is not supported on array indicies,
+//       however you can update an existing array item.
+//       ex: 'addresses.0.city': 'Charlottesville'
+user.set('addresses.1.state': 'AZ');
+user.set({ 'addresses.1.state': 'AZ' });
+user.set([
+    { 'addresses.0.state': 'VA', 'addresses.0.city': 'Charlottesville' },
+    { 'addresses.1.state': 'AZ' }
+]);
+
+// dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
 // user [M]
-//   - name [M]
-//     - first [A]
-//     - last [A]
 //   - addresses [C]
 //     - 0 [M]
 //       - city [A]
@@ -184,6 +210,79 @@ user.set({ 'addresses.1.state': 'MI' });
 //     - 1 [M]
 //       - city [A]
 //       - state [A]
+```
+
+get()
+
+```javascript
+// dot syntax
+user.get('addresses.0.state') // returns 'VA'
+user.get('addresses.1.city') // returns 'Prescott'
+
+// direct
+user.get('addresses').at('0').get('state') // returns 'VA'
+user.get('addresses').at('1').get('city') // returns 'Prescott'
+```
+
+## JSON
+
+`toJSON` will decompose the Document Model/Collection into a JSON object, ready for transport.
+
+```javascript
+serverInput = {
+    name: {
+        first: 'John',
+        last: 'Doe',
+        middle: {
+            initial: 'Z'
+        }
+    },
+    addresses: [
+        { city: 'Charlottesville', state: 'VA' },
+        { city: 'Prescott', state: 'AZ' }
+    ],
+    items: [123, 456]
+};
+
+user.set(serverInput);
+
+// dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
+// user [M]
+//   - name [M]
+//     - first [A]
+//     - last [A]
+//     - middle [M]
+//       - initial [A]
+//   - addresses [C]
+//     - 0 [M]
+//       - city [A]
+//       - state [A]
+//     - 1 [M]
+//       - city [A]
+//       - state [A]
+//   - items [C]
+//     - 0 [M]
+//       - value [A]
+//     - 1 [M]
+//       - value [A]
+
+// Calling `toJSON` will retrieve the composed document JSON representation.
+modelJSON = user.toJSON();
+
+modelJSON = {
+    name: {
+        first: 'John',
+        last: 'Doe',
+        middle: {
+            initial: 'Z'
+        }
+    },
+    addresses: [
+        { city: 'Charlottesville', state: 'VA' },
+        { city: 'Prescott', state: 'AZ' }
+    ],
+    items: [123, 456]
+};
 ```
 
 ## Events

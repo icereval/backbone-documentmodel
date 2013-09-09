@@ -183,23 +183,15 @@ user.set({
     ]
 });
 
-user.get('addresses').at('1').set('state', 'VA');
-user.get('addresses').at('1').set({ 'state': 'VA' });
-user.get('addresses').at('1').set([
-    { state: 'VA', city: 'Charlottesville' },
-    { state: 'AZ' }
-]);
+user.get('addresses').at(0).set('state', 'VA');
+user.get('addresses').at(1).set({ state: 'AZ', city: 'Prescott' });
 
 // dot syntax - will update existing Collection items, non-existing items are ignored.
 // NOTE: dynamic Collection composition is not supported on array indicies,
 //       however you can update an existing array item.
 //       ex: 'addresses.0.city': 'Charlottesville'
-user.set('addresses.1.state': 'AZ');
-user.set({ 'addresses.1.state': 'AZ' });
-user.set([
-    { 'addresses.0.state': 'VA', 'addresses.0.city': 'Charlottesville' },
-    { 'addresses.1.state': 'AZ' }
-]);
+user.set('addresses.0.state': 'VA');
+user.set({ 'addresses.1.state': 'AZ', 'addresses.1.city': 'Prescott' });
 
 // dynamic composition of Backbone Model [M], Collection [C] and Attribute [A]
 // user [M]
@@ -220,8 +212,8 @@ user.get('addresses.0.state') // returns 'VA'
 user.get('addresses.1.city') // returns 'Prescott'
 
 // direct
-user.get('addresses').at('0').get('state') // returns 'VA'
-user.get('addresses').at('1').get('city') // returns 'Prescott'
+user.get('addresses').at(0).get('state') // returns 'VA'
+user.get('addresses').at(1).get('city') // returns 'Prescott'
 ```
 
 ## JSON

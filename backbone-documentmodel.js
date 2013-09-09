@@ -1,6 +1,6 @@
 /**
  *
- * Backbone-DocumentModel v0.5.x
+ * Backbone-DocumentModel v0.6.0
  *
  * Copyright (c) 2013 Michael Haselton & Aaron Herres, Loqwai LLC
  *
@@ -32,52 +32,56 @@
         var properties = _.isArray(property) ? property : property.split('.');
         var retVal = Backbone.Model.prototype.get.call(this, properties.shift());
 
-        _.each(properties, function (prop) {
-            var parseIntProp = parseInt(prop, 10);
+        if (retVal === undefined) {
+            return undefined;
+        }
 
-            if (_.isNumber(parseIntProp) && _.isFinite(parseIntProp)) {
-                retVal = retVal.at(parseIntProp);
-            } else {
-                retVal = retVal.get(prop);
+        _.each(properties, function (prop) {
+            var parseIntProp;
+
+            if (retVal !== undefined) {
+                parseIntProp = parseInt(prop, 10);
+
+                retVal = _.isFinite(parseIntProp) ? retVal.at(parseIntProp) : retVal.get(prop);
             }
-        });
+        }, this);
 
         return retVal;
     }
 
     function documentCollectionSet(models, options) {
         options || (options = {});
-        _.extend(options, _.pick(this, ['idAttribute']));
-        if (!_.isArray(models)) models = models ? [models] : [];
 
         // Model's within Collections do not store parent/name, this can be accessed
         // through the model's collection attribute.
         delete options.name;
         delete options.parent;
 
-        if (models.length > 0) {
-            if (!_.isObject(models[0])) {
-                this.pseudoIdAttribute = true;
+        return Backbone.Collection.prototype.set.call(this, models, options);
+    }
 
-                models = _.map(models, function (value) {
-                    var model = {};
+    function documentModelPrepeare(attrs, options) {
+        _.extend(options, _.pick(this.idAttribute ? this : _.isObject(attrs) ? attrs : this, ['idAttribute']));
 
-                    model[options.idAttribute] = _.uniqueId();
-                    model.value = value;
+        // If we are parsing an array of values we'll need to generate a pseudoIdAttribute.
+        if (!_.isObject(attrs)) {
+            var value = attrs;
 
-                    return model;
-                });
-            }
+            this.pseudoIdAttribute = true;
+
+            attrs = {};
+            attrs[options.idAttribute] = _.uniqueId();
+            attrs.value = value;
         }
 
-        Backbone.Collection.prototype.set.call(this, models, options);
-
-        return this;
+        return Backbone.Collection.prototype._prepareModel.call(this, attrs, options);
     }
 
     function documentModelSet(key, val, options) {
-        var nestedAttrs = {};
-        var deepNamedAttrs = {};
+        var attrs,
+            isBackboneObj,
+            nestedAttrs = {},
+            deepNamedAttrs = {};
 
         if (key == null) return this;
 
@@ -91,65 +95,103 @@
 
         options || (options = {});
 
-        _.each(_.keys(attrs), function (attrKey) {
-            if (attrKey.indexOf('.') > 0) {
-                deepNamedAttrs[attrKey] = attrs[attrKey];
-                delete attrs[attrKey];
-            } else if (_.isObject(attrs[attrKey])) {
-                nestedAttrs[attrKey] = attrs[attrKey];
-                delete attrs[attrKey];
-            }
-        });
+        // If the object is already a Collection or Model assume its a Document object.
+        isBackboneObj =  attrs instanceof Backbone.Collection || attrs instanceof Backbone.Model;
 
-        Backbone.Model.prototype.set.call(this, attrs, options);
+        if (!isBackboneObj) {
+            _.each(_.keys(attrs), function (attrKey) {
+                if (attrKey.indexOf('.') > 0) {
+                    deepNamedAttrs[attrKey] = attrs[attrKey];
+                    delete attrs[attrKey];
+                } else if (_.isObject(attrs[attrKey])) {
+                    nestedAttrs[attrKey] = attrs[attrKey];
+                    delete attrs[attrKey];
+                }
+            });
+        }
 
-        // Handle Deep Named Attributes - ex: { 'name.first': 'Joe' }
-        _.each(_.keys(deepNamedAttrs), function (deepAttrKey) {
-            var origDeepAttrValue = this.get.call(this, deepAttrKey);
+        if (!Backbone.Model.prototype.set.call(this, attrs, options)) return false;
 
-            if (!_.isEqual(origDeepAttrValue, deepNamedAttrs[deepAttrKey])) {
-                var splitDeepAttrKey = deepAttrKey.split('.');
-                var deepAttrName = splitDeepAttrKey.pop();
+        if (!isBackboneObj) {
+            // Refactor Deep Named Attributes ( ex: { 'name.first': 'Joe' } ) into Objects/Arrays for nested attribute merge.
+            _.each(_.keys(deepNamedAttrs), function (deepAttrKey) {
+                var splitDeepAttrs = deepAttrKey.split('.'),
+                    deepAttrName = splitDeepAttrs.pop(),
+                    deepAttrHandled = false;
 
-                var deepAttrParentName = _.reduce(splitDeepAttrKey, function (memo, val) {
-                    return memo + '.' + val;
-                });
+                var parentNestedAttr = nestedAttrs;
 
-                var deepAttrParent = this.get.call(this, deepAttrParentName);
-                deepAttrParent.set(deepAttrName, deepNamedAttrs[deepAttrKey], options);
-            }
-        }, this);
+                for (var i = 0; i < splitDeepAttrs.length; i++) {
+                    var splitDeepAttrKey = splitDeepAttrs[i],
+                        childSplitDeepAttrKey = splitDeepAttrs[i + 1];
 
-        // Handle Nested Attribute Creation - ex: { name: { first: 'Joe' } }
-        _.each(_.keys(nestedAttrs), function (nestedAttrKey) {
-            var nestedOptions = { parent: this };
-            _.extend(nestedOptions, _.pick(this, ['idAttribute']));
-            nestedOptions.name = nestedAttrKey;
+                    if (_.isFinite(childSplitDeepAttrKey)) {
+                        var deepAttrParentName = _.reduce(splitDeepAttrs, function (memo, val) {
+                                return memo + '.' + val;
+                            }),
+                            deepAttrParent = this.get.call(this, deepAttrParentName);
 
-            if (_.isArray(nestedAttrs[nestedAttrKey])) {
-                // Collection
-                Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentCollection(nestedAttrs[nestedAttrKey], nestedOptions), options);
-            } else {
-                // Model
-                if (this instanceof Backbone.DocumentModel) {
-                    // Model -> Model
+                        if (deepAttrParent) {
+                            deepAttrParent.set(deepAttrName, deepNamedAttrs[deepAttrKey], options);
+                        }
 
-                    if (!nestedAttrs[nestedAttrKey][this.idAttribute]) {
-                        // If no id has was specified for the nested Model, use it's parent id.
-                        // This is required for patching updates and will be omitted on JSON build.
-                        nestedAttrs[nestedAttrKey][this.idAttribute] = this.get(this.idAttribute);
-                        nestedOptions.pseudoIdAttribute = true;
+                        deepAttrHandled = true;
+
+                        break;
+                    } else {
+                        if (!parentNestedAttr[splitDeepAttrKey]) {
+                            parentNestedAttr[splitDeepAttrKey] = {};
+                        }
+
+                        parentNestedAttr = parentNestedAttr[splitDeepAttrKey];
                     }
                 }
 
-                Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentModel(nestedAttrs[nestedAttrKey], nestedOptions), options);
-            }
-        }, this);
+                if (!deepAttrHandled) {
+                    parentNestedAttr[deepAttrName] = deepNamedAttrs[deepAttrKey];
+                }
+            }, this);
+
+            // Handle Nested Attribute Creation - ex: { name: { first: 'Joe' } }
+            _.each(_.keys(nestedAttrs), function (nestedAttrKey) {
+                var nestedOptions;
+
+                // If the attribute already exists, merge the objects.
+                if (this.attributes[nestedAttrKey]) {
+                    this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedAttrs[nestedAttrKey], options);
+                } else {
+                    nestedOptions = { parent: this };
+                    _.extend(nestedOptions, _.pick(this, ['idAttribute']));
+                    nestedOptions.name = nestedAttrKey;
+
+                    if (_.isArray(nestedAttrs[nestedAttrKey])) {
+                        // Collection
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentCollection(nestedAttrs[nestedAttrKey], nestedOptions), options);
+                    } else {
+                        // Model
+                        if (this instanceof Backbone.DocumentModel) {
+                            // Model -> Model
+
+                            if (!nestedAttrs[nestedAttrKey][this.idAttribute]) {
+                                // If no id has was specified for the nested Model, use it's parent id.
+                                // This is required for patching updates and will be omitted on JSON build.
+                                nestedAttrs[nestedAttrKey][this.idAttribute] = this.get(this.idAttribute);
+                                nestedOptions.pseudoIdAttribute = true;
+                            }
+                        }
+
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentModel(nestedAttrs[nestedAttrKey], nestedOptions), options);
+                    }
+                }
+            }, this);
+        }
+
+        return this;
     }
 
     function documentToJSON() {
-        var omitList = [];
-        var response;
+        var omitList = [],
+            response;
 
         if (this instanceof Backbone.Collection) {
             var models = this.models;
@@ -190,12 +232,12 @@
     }
 
     function documentEvents(eventName) {
-        var eventSplit = eventName.split(':');
-        var eventType = eventSplit[0];
-        var eventAttrs = eventSplit.length > 1 ? _.last(eventSplit, eventSplit.length - 1)[0].split('.') : [];
-        var args = Array.prototype.slice.call(arguments, 0);
+        var eventSplit = eventName.split(':'),
+            eventType = eventSplit[0],
+            eventAttrs = eventSplit.length > 1 ? _.last(eventSplit, eventSplit.length - 1)[0].split('.') : [],
+            args = Array.prototype.slice.call(arguments, 0);
 
-        console.log('DocumentEvent:event:this (' + this.name + ') [' + (this instanceof Backbone.Model ? 'M' : 'C') + ']:' + eventName);
+        //console.log('DocumentEvent:event:this (' + this.name + ') [' + (this instanceof Backbone.Model ? 'M' : 'C') + ']:' + eventName);
 
         if (eventName === 'change') {
             return;
@@ -210,7 +252,7 @@
 
         args[0] = eventType + ':' + event;
 
-        console.log('DocumentEvent:trigger:this (' + this.name + ') [' + (this instanceof Backbone.Model ? 'M' : 'C') + ']:parent (' + (this.parent.name ? this.parent.name : this.parent.collection.name) + ') [' + (this.parent instanceof Backbone.Model ? 'M' : 'C') + ']:' + args[0]);
+        //console.log('DocumentEvent:trigger:this (' + this.name + ') [' + (this instanceof Backbone.Model ? 'M' : 'C') + ']:parent (' + (this.parent.name || (this.parent.collection ? this.parent.collection.name : 'undefined')) + ') [' + (this.parent instanceof Backbone.Model ? 'M' : 'C') + ']:' + args[0]);
         this.parent.trigger.apply(this.parent, args);
     }
 
@@ -254,7 +296,11 @@
             obj = obj.parent || obj.collection.parent;
         }
 
-        Backbone.Model.prototype.save.call(obj, key, val, options);
+        return Backbone.Model.prototype.save.call(obj, key, val, options);
+    }
+
+    function documentClone() {
+        return new this.constructor(this.toJSON());
     }
 
     var DocumentModel = Backbone.Model.extend({
@@ -274,6 +320,7 @@
         get: documentModelGet,
         set: documentModelSet,
         save: documentSave,
+        clone: documentClone,
         trigger: documentTrigger
     });
 
@@ -291,11 +338,12 @@
         },
         pseudoIdAttribute: false,
         model: DocumentModel,
-        idAttribute: 'id',
         toJSON: documentToJSON,
         get: documentCollectionGet,
         set: documentCollectionSet,
-        trigger: documentTrigger
+        clone: documentClone,
+        trigger: documentTrigger,
+        _prepareModel: documentModelPrepeare
     });
 
     //Exports

@@ -661,12 +661,13 @@ $(document).ready(function() {
         ok(model.has('attributes'));
     });
 
-    // MODIFIED due to DocumentModel composes original into Collection object, separate instances will never equal.
+    // MODIFIED due to DocumentModel composes original into Collection object, separate instances will never equal,
+    // perform deep model comparison using underscore isEqual.
     test("set value regardless of equality/change", 1, function() {
         var model = new Backbone.DocumentModel({x: []});
         var a = [];
         model.set({x: a});
-        ok(model.get('x').toJSON().toString() === a.toString());
+        ok(_.isEqual(model.get('x').toJSON(), a));
     });
 
     test("set same value does not trigger change", 0, function() {
@@ -1266,5 +1267,181 @@ $(document).ready(function() {
 
         model.set('items.0.foo', 3);
         model.get('items').at(1).set('foo', 4);
+    });
+
+    test("readme.md - setup our document model object", 9, function () {
+        var model = new Backbone.DocumentModel();
+
+        model.set({
+            name: {
+                first: 'John',
+                last: 'Doe'
+            },
+            addresses: [
+                { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
+                { type: 'Billing', city: 'Prescott', state: 'AZ' }
+            ]
+        });
+
+        equal(model.get('name.first'), 'John');
+        equal(model.get('name.last'), 'Doe');
+        equal(model.get('addresses.0.type'), 'Shipping');
+        equal(model.get('addresses.0.city'), 'Charlottesville');
+        equal(model.get('addresses.0.state'), 'VA');
+        equal(model.get('addresses.1.type'), 'Billing');
+        equal(model.get('addresses.1.city'), 'Prescott');
+        equal(model.get('addresses.1.state'), 'AZ');
+        equal(model.get('addresses').length, 2);
+    });
+
+    test("readme.md - ... best practice to pass only the specific model/collection ...", 24, function () {
+        var model = new Backbone.DocumentModel({
+            name: {
+                first: 'John',
+                last: 'Doe'
+            },
+            addresses: [
+                { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
+                { type: 'Billing', city: 'Prescott', state: 'AZ' }
+            ]
+        });
+
+        model.on('add:addresses', function () {
+            ok(1);
+        }, this);
+
+        model.on('remove:addresses', function () {
+            ok(1);
+        }, this);
+
+        model.on('change:addresses.*', function () {
+            ok(1);
+        }, this);
+
+        equal(model.get('addresses.0.type'), 'Shipping');
+        equal(model.get('addresses.0.city'), 'Charlottesville');
+        equal(model.get('addresses.0.state'), 'VA');
+        equal(model.get('addresses.1.type'), 'Billing');
+        equal(model.get('addresses.1.city'), 'Prescott');
+        equal(model.get('addresses.1.state'), 'AZ');
+        equal(model.get('addresses').length, 2);
+
+        // onAddAddress
+        model.get('addresses').add({
+            type: 'Cottage',
+            city: 'Luray',
+            state: 'VA'
+        });
+
+        equal(model.get('addresses.2.type'), 'Cottage');
+        equal(model.get('addresses.2.city'), 'Luray');
+        equal(model.get('addresses.2.state'), 'VA');
+        equal(model.get('addresses').length, 3);
+
+        // onEditAddress
+        model.get('addresses').at(1).set({ city: 'Los Angeles', state: 'CA' });
+        model.set('addresses.0.city', 'Arlington');
+
+        equal(model.get('addresses.0.city'), 'Arlington');
+        equal(model.get('addresses.1.type'), 'Billing');
+        equal(model.get('addresses.1.city'), 'Los Angeles');
+        equal(model.get('addresses.1.state'), 'CA');
+        equal(model.get('addresses').length, 3);
+
+        // onRemoveAddress
+        model.get('addresses').remove(model.get('addresses.0'));
+
+        equal(model.get('addresses.0.city'), 'Los Angeles');
+        equal(model.get('addresses.1.city'), 'Luray');
+        equal(model.get('addresses').length, 2);
+    });
+
+    test("readme.md - nested attributes & document composition - 1-1", 10, function () {
+        var expectedJSON = {
+            name: {
+                first: 'John',
+                last: 'Doe',
+                middle: {
+                    initial: 'Z'
+                }
+            }
+        };
+
+        // object syntax
+        var model = new Backbone.DocumentModel({
+            name: {
+                first: 'John',
+                last: 'Doe',
+                middle: {
+                    initial: 'Z'
+                }
+            }
+        });
+        equal(_.isEqual(model.toJSON(), expectedJSON), true);
+        equal(model.get('name').get('first'), 'John');
+        equal(model.get('name').get('last'), 'Doe');
+        equal(model.get('name').get('middle').get('initial'), 'Z');
+
+        model.get('name').get('middle').set('initial', 'Y');
+        equal(model.get('name').get('middle').get('initial'), 'Y');
+
+        // dot syntax
+        model = new Backbone.DocumentModel({
+            'name.first': 'John',
+            'name.last': 'Doe',
+            'name.middle.initial': 'Z'
+        });
+        equal(_.isEqual(model.toJSON(), expectedJSON), true);
+        equal(model.get('name.first'), 'John');
+        equal(model.get('name.last'), 'Doe');
+        equal(model.get('name.middle.initial'), 'Z');
+
+        model.set('name.middle.initial', 'Y');
+        equal(model.get('name.middle.initial'), 'Y');
+    });
+
+    test("readme.md - nested attributes & document composition - 1-N", 14, function () {
+        var expectedJSON = {
+            addresses: [
+                { city: 'Charlottesville', state: 'VA' },
+                { city: 'Prescott', state: 'AZ' }
+            ]
+        };
+
+        // object syntax
+        var model = new Backbone.DocumentModel({
+            addresses: [
+                { city: 'Charlottesville', state: 'VA' },
+                { city: 'Prescott', state: 'AZ' }
+            ]
+        });
+        equal(_.isEqual(model.toJSON(), expectedJSON), true);
+        equal(model.get('addresses').at(0).get('city'), 'Charlottesville');
+        equal(model.get('addresses').at(0).get('state'), 'VA');
+        equal(model.get('addresses').at(1).get('city'), 'Prescott');
+        equal(model.get('addresses').at(1).get('state'), 'AZ');
+
+        model.get('addresses').at(1).set('state', 'MI');
+        equal(model.get('addresses').at(1).get('state'), 'MI');
+
+        model.get('addresses').at(1).set({ state: 'OR' });
+        equal(model.get('addresses').at(1).get('state'), 'OR');
+
+        model.get('addresses').set([
+            { state: 'VA', city: 'Charlottesville' },
+            { state: 'AZ', city: 'Prescott' }
+        ]);
+        equal(model.get('addresses').at(0).get('city'), 'Charlottesville');
+        equal(model.get('addresses').at(0).get('state'), 'VA');
+        equal(model.get('addresses').at(1).get('city'), 'Prescott');
+        equal(model.get('addresses').at(1).get('state'), 'AZ');
+
+        // dot syntax
+        model.set('addresses.0.state', 'MI');
+        equal(model.get('addresses.0.state'), 'MI');
+
+        model.set({ 'addresses.1.state': 'OR', 'addresses.1.city': 'Portland' });
+        equal(model.get('addresses.1.state'), 'OR');
+        equal(model.get('addresses.1.city'), 'Portland');
     });
 });

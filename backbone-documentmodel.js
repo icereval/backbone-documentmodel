@@ -155,32 +155,39 @@
             // Handle Nested Attribute Creation - ex: { name: { first: 'Joe' } }
             _.each(_.keys(nestedAttrs), function (nestedAttrKey) {
                 var nestedOptions;
-
+                var nestedValue = nestedAttrs[nestedAttrKey]
                 // If the attribute already exists, merge the objects.
                 if (this.attributes[nestedAttrKey]) {
-                    this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedAttrs[nestedAttrKey], options);
+                    this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
                 } else {
                     nestedOptions = { parent: this };
                     _.extend(nestedOptions, _.pick(this, ['idAttribute']));
                     nestedOptions.name = nestedAttrKey;
 
-                    if (_.isArray(nestedAttrs[nestedAttrKey])) {
+                    if (_.isArray(nestedValue)) {
                         // Collection
-                        Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentCollection(nestedAttrs[nestedAttrKey], nestedOptions), options);
-                    } else {
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentCollection(nestedValue, nestedOptions), options);
+                    }  else {
                         // Model
                         if (this instanceof Backbone.DocumentModel) {
                             // Model -> Model
-
-                            if (!nestedAttrs[nestedAttrKey][this.idAttribute]) {
+                            if (nestedValue instanceof Backbone.DocumentModel) {
+                                if (!nestedValue.get(this.idAttribute)) {
+                                    // If no id has was specified for the nested Model, use it's parent id.
+                                    // This is required for patching updates and will be omitted on JSON build.
+                                    nestedValue.set(this.idAttribute, this.get(this.idAttribute), {silent:true});
+                                    nestedOptions.pseudoIdAttribute = true;
+                                }
+                                _.extend(nestedValue, nestedOptions);
+                                Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
+                            }else if (!nestedValue[this.idAttribute]) {
                                 // If no id has was specified for the nested Model, use it's parent id.
                                 // This is required for patching updates and will be omitted on JSON build.
-                                nestedAttrs[nestedAttrKey][this.idAttribute] = this.get(this.idAttribute);
+                                nestedValue[this.idAttribute] = this.get(this.idAttribute);
                                 nestedOptions.pseudoIdAttribute = true;
+                                Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, new Backbone.DocumentModel(nestedValue, nestedOptions), options);
                             }
                         }
-
-                        Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentModel(nestedAttrs[nestedAttrKey], nestedOptions), options);
                     }
                 }
             }, this);

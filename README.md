@@ -312,10 +312,10 @@ user.on('remove:*', function () { ... });
 
 #### 0.6.0
 
-Added minimally altered backbone model/collection unit tests.
-Added readme.md specific tests.
-Updated backbone-documentmodel.js to pass unit tests.
+- Added minimally altered backbone model/collection unit tests.
+- Added readme.md specific tests.
+- Updated backbone-documentmodel.js to pass unit tests.
 
 #### 0.5.x
 
-Initial release!
+- Initial release!

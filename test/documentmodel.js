@@ -311,6 +311,9 @@ $(document).ready(function() {
         var model = new Backbone.DocumentModel({
             custom: { foo: 1 }
         });
+        model.on('all', function(){
+            console.log(arguments);
+        });
         model.on('change:*', function() {
             ok(1);
         });
@@ -326,6 +329,7 @@ $(document).ready(function() {
         model.set({
             custom: { foo: 2 } // change event should be fired
         });
+        model.set('custom.foo', 3);
     });
 
     test("clear", 3, function() {

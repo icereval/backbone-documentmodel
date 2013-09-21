@@ -111,7 +111,13 @@
             }
             if (attrs[key] instanceof Backbone.DocumentModel || attrs[key] instanceof Backbone.DocumentCollection) {
                 this.listenTo(attrs[key], 'all', function(eventName, data){
-                    this.trigger(key + ':' + eventName, data);
+                    eventName = eventName.split(':');
+                    var newEventName = eventName.shift() + ':' + key + '.' + eventName.join('.');
+                    if (newEventName.lastIndexOf('.') === newEventName.length - 1) {
+                       newEventName = newEventName.substring(0, newEventName.length - 1);
+                    }
+                    console.log('DocumentEvent:event:this (' + key + ') [' + (attrs[key] instanceof Backbone.Model ? 'M' : 'C') + ']:' + newEventName);
+                    this.trigger(newEventName, data);
                 });
             }
         }, this);
@@ -132,8 +138,8 @@
         }
 
         if (currentValue === undefined || !_.isObject(currentValue)) {
-            currentValue = _.isFinite(location) ? new Backbone.DocumentCollection([],options) : new Backbone.DocumentModel({},options);
-            setOrAt(parent, location, currentValue, options);
+                currentValue = _.isFinite(location) ? new Backbone.DocumentCollection([],options) : new Backbone.DocumentModel({},options);
+                setOrAt(parent, location, currentValue, _.extend({}, options, {silent: true}));
         }
         _setNestedAttr(currentValue, splitKey, value, options);
     }
@@ -285,12 +291,6 @@
             options || (options = {});
             _.extend(this, _.pick(options, ['idAttribute', 'parent', 'name']));
             Backbone.Collection.apply(this, arguments);
-
-            this.on('all', function () {
-                if (this.parent && this.name) {
-                    documentEvents.apply(this, arguments)
-                }
-            }, this);
         },
         pseudoIdAttribute: false,
         model: DocumentModel,

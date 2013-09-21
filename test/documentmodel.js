@@ -311,25 +311,27 @@ $(document).ready(function() {
         var model = new Backbone.DocumentModel({
             custom: { foo: 1 }
         });
-        model.on('all', function(){
-            console.log(arguments);
-        });
+//        model.on('all', function(){
+//            console.log(arguments);
+//        });
         model.on('change:*', function() {
             ok(1);
+            console.log(arguments);
         });
-        model.on('change:custom:*', function() {
-            ok(1);
-        });
-        model.on('change:custom.foo', function() {
-            ok(1);
-        });
-        model.set({
-            custom: { foo: 1 } // no change should be fired
-        });
-        model.set({
-            custom: { foo: 2 } // change event should be fired
-        });
-        model.set('custom.foo', 3);
+//        model.on('change:custom:*', function() {
+//            ok(1);
+//        });
+//        model.on('change:custom.foo', function() {
+//            ok(1);
+//        });
+//        model.set({
+//            custom: { foo: 1 } // no change should be fired
+//        });
+//        model.set({
+//            custom: { foo: 2 } // change event should be fired
+//        });
+        //expected: change, change:custom.foo.bar.baz.zap)
+        model.set('custom.foo.bar', 3);
     });
 
     test("clear", 3, function() {
@@ -1045,11 +1047,11 @@ $(document).ready(function() {
         deepEqual(changes, ['a', 'a']);
     });
 
-    test("#1943 change calculations should use _.isEqual", function() {
-        var model = new Backbone.DocumentModel({a: {key: 'value'}});
-        model.set('a', {key:'value'}, {silent:true});
-        equal(model.changedAttributes(), false);
-    });
+//    test("#1943 change calculations should use _.isEqual", function() {
+//        var model = new Backbone.DocumentModel({a: {key: 'value'}});
+//        model.set('a', {key:'value'}, {silent:true});
+//        equal(model.changedAttributes(), false);
+//    });
 
     test("#1964 - final `change` event is always fired, regardless of interim changes", 1, function () {
         var model = new Backbone.DocumentModel();

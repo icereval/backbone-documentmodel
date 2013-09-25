@@ -185,7 +185,7 @@
                                 // This is required for patching updates and will be omitted on JSON build.
                                 nestedValue[this.idAttribute] = this.get(this.idAttribute);
                                 nestedOptions.pseudoIdAttribute = true;
-                                Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, new Backbone.DocumentModel(nestedValue, nestedOptions), options);
+                                Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentModel(nestedValue, nestedOptions), options);
                             }
                         }
                     }

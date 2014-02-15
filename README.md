@@ -310,9 +310,13 @@ user.on('remove:*', function () { ... });
 
 ## Changelog
 
+#### 0.6.2
+
+- Fixes issue #5 address wrapped primitives.
+
 #### 0.6.1
 
-- Fixed issue #4 and added test case, now properly handles nested arrays.
+- Fixes issue #4 properly handles nested arrays.
 
 #### 0.6.0
 

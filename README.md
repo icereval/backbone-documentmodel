@@ -310,6 +310,10 @@ user.on('remove:*', function () { ... });
 
 ## Changelog
 
+#### 0.6.1
+
+- Fixed issue #4 and added test case, now properly handles nested arrays.
+
 #### 0.6.0
 
 - Added minimally altered backbone model/collection unit tests.

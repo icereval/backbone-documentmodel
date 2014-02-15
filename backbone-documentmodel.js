@@ -1,6 +1,6 @@
 /**
  *
- * Backbone-DocumentModel v0.6.0
+ * Backbone-DocumentModel v0.6.1
  *
  * Copyright (c) 2013 Michael Haselton & Aaron Herres, Loqwai LLC
  *
@@ -43,6 +43,11 @@
                 parseIntProp = parseInt(prop, 10);
 
                 retVal = _.isFinite(parseIntProp) ? retVal.at(parseIntProp) : retVal.get(prop);
+
+                // If the value is a 'pseudo' object go ahead and retrieve its 'value' attribute.
+                if (retVal !== undefined && retVal.collection && retVal.collection.pseudoIdAttribute) {
+                    retVal = retVal.get('value');
+                }
             }
         }, this);
 
@@ -63,8 +68,8 @@
     function documentModelPrepeare(attrs, options) {
         _.extend(options, _.pick(this.idAttribute ? this : _.isObject(attrs) ? attrs : this, ['idAttribute']));
 
-        // If we are parsing an array of values we'll need to generate a pseudoIdAttribute.
-        if (!_.isObject(attrs)) {
+        // If we are parsing an array or values we'll need to generate a pseudoIdAttribute.
+        if (!_.isObject(attrs) || _.isArray(attrs)) {
             var value = attrs;
 
             this.pseudoIdAttribute = true;

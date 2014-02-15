@@ -1444,4 +1444,34 @@ $(document).ready(function() {
         equal(model.get('addresses.1.state'), 'OR');
         equal(model.get('addresses.1.city'), 'Portland');
     });
+
+    test("#4 - setting nested array to existing model", 5, function () {
+        var model = new Backbone.DocumentModel({items:[]});
+        model.set('items', [[1],[2]]);
+
+        // Backbone Model [M], Collection [C] and Attribute [A]
+        // model [M]
+        //   - items [C]
+        //     - 0 [M]
+        //       - value [C]
+        //         - 0 [M]
+        //           - value [A]
+        //     - 1 [M]
+        //       - value [C]
+        //         - 0 [M]
+        //           - value [A]
+        //
+        // Requires the use of pseudo attributes as there is no 'named' anchor point other than the array index.
+        // model.get('items.0.0') === 1
+        //            C     C A <-- inflection should occur so Model's 'value' is resolved to the Collection or Attribute
+        //
+        // model.get('items.0.value.0.value')
+        //            C    [M C]   [M A]
+
+        equal(model.get('items.0') instanceof Backbone.Model, false);
+        equal(model.get('items.0') instanceof Backbone.Collection, true);
+        equal(model.get('items.0.0') instanceof Backbone.Model, false);
+        equal(model.get('items.0.0') instanceof Backbone.Collection, false);
+        equal(model.get('items.0.0'), 1);
+    });
 });

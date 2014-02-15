@@ -1474,4 +1474,41 @@ $(document).ready(function() {
         equal(model.get('items.0.0') instanceof Backbone.Collection, false);
         equal(model.get('items.0.0'), 1);
     });
+
+    test("#5 - incorrect processing of wrapped primitives", 12, function () {
+        // Note: isEqual will result true when comparing a primitive to wrapped object
+        // https://github.com/jashkenas/underscore/pull/351
+
+        var model = new Backbone.DocumentModel({
+            foo: new Date('1/1/2010 1:57:39')
+        });
+
+        equal(_.isEqual(model.get('foo'), '1/1/2010 1:57:39'), false);
+        equal(_.isEqual(model.get('foo'), new Date('1/1/2010 1:57:39')), true);
+        equal(_.isEqual(model.toJSON(), { foo: new Date('1/1/2010 1:57:39') }), true);
+
+        model = new Backbone.DocumentModel({
+            foo: new Boolean(true)
+        });
+
+        equal(_.isEqual(model.get('foo'), true), true);
+        equal(_.isEqual(model.get('foo'), new Boolean(true)), true);
+        equal(_.isEqual(model.toJSON(), { foo: new Boolean(true) }), true);
+
+        model = new Backbone.DocumentModel({
+            foo: new Number(1234)
+        });
+
+        equal(_.isEqual(model.get('foo'), 1234), true);
+        equal(_.isEqual(model.get('foo'), new Number(1234)), true);
+        equal(_.isEqual(model.toJSON(), { foo: new Number(1234) }), true);
+
+        model = new Backbone.DocumentModel({
+            foo: new String('wrapped primitive')
+        });
+
+        equal(_.isEqual(model.get('foo'), 'wrapped primitive'), true);
+        equal(_.isEqual(model.get('foo'), new String('wrapped primitive')), true);
+        equal(_.isEqual(model.toJSON(), { foo: new String('wrapped primitive') }), true);
+    });
 });

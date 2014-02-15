@@ -1,6 +1,6 @@
 /**
  *
- * Backbone-DocumentModel v0.6.1
+ * Backbone-DocumentModel v0.6.2
  *
  * Copyright (c) 2013 Michael Haselton & Aaron Herres, Loqwai LLC
  *
@@ -69,7 +69,8 @@
         _.extend(options, _.pick(this.idAttribute ? this : _.isObject(attrs) ? attrs : this, ['idAttribute']));
 
         // If we are parsing an array or values we'll need to generate a pseudoIdAttribute.
-        if (!_.isObject(attrs) || _.isArray(attrs)) {
+        if (toString.call(attrs) !== '[object Object]' || _.isArray(attrs)) {
+            // #5 - Ensure we do not omit wrapped primitives.
             var value = attrs;
 
             this.pseudoIdAttribute = true;
@@ -108,7 +109,8 @@
                 if (attrKey.indexOf('.') > 0) {
                     deepNamedAttrs[attrKey] = attrs[attrKey];
                     delete attrs[attrKey];
-                } else if (_.isObject(attrs[attrKey])) {
+                } else if (toString.call(attrs[attrKey]) === '[object Object]' || _.isArray(attrs[attrKey])) {
+                    // #5 - Ensure we do not omit wrapped primitives.
                     nestedAttrs[attrKey] = attrs[attrKey];
                     delete attrs[attrKey];
                 }
@@ -185,7 +187,7 @@
                                 }
                                 _.extend(nestedValue, nestedOptions);
                                 Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
-                            }else if (!nestedValue[this.idAttribute]) {
+                            } else if (!nestedValue[this.idAttribute]) {
                                 // If no id has was specified for the nested Model, use it's parent id.
                                 // This is required for patching updates and will be omitted on JSON build.
                                 nestedValue[this.idAttribute] = this.get(this.idAttribute);

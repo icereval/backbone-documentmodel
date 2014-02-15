@@ -15,7 +15,7 @@
     "test": "phantomjs test/vendor/runner.js test/index.html?noglobals=true"
   },
   "main": "backbone-documentmodel.js",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "license": "MIT",
   "repository": {
     "type": "git",

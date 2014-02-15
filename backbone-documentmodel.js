@@ -1,6 +1,6 @@
 /**
  *
- * Backbone-DocumentModel v0.6.0
+ * Backbone-DocumentModel v0.6.1
  *
  * Copyright (c) 2013 Michael Haselton & Aaron Herres, Loqwai LLC
  *

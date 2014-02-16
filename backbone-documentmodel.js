@@ -1,6 +1,6 @@
 /**
  *
- * Backbone-DocumentModel v0.6.2
+ * Backbone-DocumentModel v0.6.3
  *
  * Copyright (c) 2013 Michael Haselton & Aaron Herres, Loqwai LLC
  *
@@ -69,7 +69,7 @@
         _.extend(options, _.pick(this.idAttribute ? this : _.isObject(attrs) ? attrs : this, ['idAttribute']));
 
         // If we are parsing an array or values we'll need to generate a pseudoIdAttribute.
-        if (toString.call(attrs) !== '[object Object]' || _.isArray(attrs)) {
+        if (Object.prototype.toString.call(attrs) !== '[object Object]' || _.isArray(attrs)) {
             // #5 - Ensure we do not omit wrapped primitives.
             var value = attrs;
 
@@ -109,7 +109,7 @@
                 if (attrKey.indexOf('.') > 0) {
                     deepNamedAttrs[attrKey] = attrs[attrKey];
                     delete attrs[attrKey];
-                } else if (toString.call(attrs[attrKey]) === '[object Object]' || _.isArray(attrs[attrKey])) {
+                } else if (Object.prototype.toString.call(attrs[attrKey]) === '[object Object]' || _.isArray(attrs[attrKey])) {
                     // #5 - Ensure we do not omit wrapped primitives.
                     nestedAttrs[attrKey] = attrs[attrKey];
                     delete attrs[attrKey];

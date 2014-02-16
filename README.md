@@ -310,6 +310,10 @@ user.on('remove:*', function () { ... });
 
 ## Changelog
 
+#### 0.6.3
+
+- Fixes issue #6 fully reference Object.prototype.toString since certain browser's do not resolve method.
+
 #### 0.6.2
 
 - Fixes issue #5 address wrapped primitives.

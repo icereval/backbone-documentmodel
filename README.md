@@ -1,5 +1,4 @@
-# Backbone-DocumentModel [![Build Status](https://secure.travis-ci.org/icereval/backbone-documentmodel.png?branch=master)](https://travis-ci.org/icereval/backbone-documentmodel) [![Coverage Status](https://coveralls.io/repos/icereval/backbone-documentmodel/badge.png)](https://coveralls.io/r/icereval/backbone-documentmodel)
-
+# Backbone-DocumentModel [![Build Status](https://secure.travis-ci.org/icereval/backbone-documentmodel.png?branch=master)](https://travis-ci.org/icereval/backbone-documentmodel)
 A plugin to create entire Document structures with nested [Backbone.js](http://documentcloud.github.com/backbone) Models & Collections with `deep model` references and `event bubbling`.
 
 The Document is simply a reference to the project's goal of allowing [MongoDB Document](http://docs.mongodb.org/manual/core/document/) JSON representation to be dynamically composed/referenced/updated and saved using native Backbone.js components.

@@ -253,18 +253,16 @@
 
         //console.log('DocumentEvent:event:this (' + this.name + ') [' + (this instanceof Backbone.Model ? 'M' : 'C') + ']:' + eventName);
 
-        if (eventName === 'change') {
-            return;
+        if (eventName !== 'change') {
+          // Only trigger events on Models, Collections automatically replicate Child Model events.
+          eventAttrs.unshift(this.name);
+
+          var event = _.reduce(eventAttrs, function (memo, val) {
+              return memo + '.' + val;
+          });
+
+          args[0] = eventType + ':' + event;
         }
-
-        // Only trigger events on Models, Collections automatically replicate Child Model events.
-        eventAttrs.unshift(this.name);
-
-        var event = _.reduce(eventAttrs, function (memo, val) {
-            return memo + '.' + val;
-        });
-
-        args[0] = eventType + ':' + event;
 
         //console.log('DocumentEvent:trigger:this (' + this.name + ') [' + (this instanceof Backbone.Model ? 'M' : 'C') + ']:parent (' + (this.parent.name || (this.parent.collection ? this.parent.collection.name : 'undefined')) + ') [' + (this.parent instanceof Backbone.Model ? 'M' : 'C') + ']:' + args[0]);
         this.parent.trigger.apply(this.parent, args);

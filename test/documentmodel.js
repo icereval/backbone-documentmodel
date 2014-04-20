@@ -1511,4 +1511,14 @@ $(document).ready(function() {
         equal(_.isEqual(model.get('foo'), new String('wrapped primitive')), true);
         equal(_.isEqual(model.toJSON(), { foo: new String('wrapped primitive') }), true);
     });
+
+    test("#7 - strange output on nested collection models tojson()", 3, function () {
+        var model = new Backbone.DocumentModel({
+            emails : ['foo@bar.com', 'whiz@foo.foo', 'haha@lol.joke']
+        });
+
+        model.get('emails').each(function (eml) {
+            equal(eml.get('value'), eml.toJSON());
+        });
+    });
 });

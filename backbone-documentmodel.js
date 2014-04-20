@@ -224,22 +224,27 @@
             var attributes = this.attributes;
             response = {};
 
-            _.each(_.keys(attributes), function (attrKey) {
-                if (attributes[attrKey] instanceof Backbone.Model || attributes[attrKey] instanceof Backbone.Collection) {
-                    omitList.push(attrKey);
+            // #7 - Strange output on nested collection models toJSON()
+            if (this.collection && this.collection.pseudoIdAttribute) {
+                response = this.get('value');
+            } else {
+                _.each(_.keys(attributes), function (attrKey) {
+                    if (attributes[attrKey] instanceof Backbone.Model || attributes[attrKey] instanceof Backbone.Collection) {
+                        omitList.push(attrKey);
+                    }
+                });
+
+                // clear pseudo parent id reference.
+                if (this.pseudoIdAttribute) {
+                    delete attributes[this.idAttribute];
                 }
-            });
 
-            // clear pseudo parent id reference.
-            if (this.pseudoIdAttribute) {
-                delete attributes[this.idAttribute];
+                response = _.omit(attributes, omitList);
+
+                _.each(omitList, function (omitKey) {
+                    response[omitKey] = attributes[omitKey].toJSON();
+                });
             }
-
-            response = _.omit(attributes, omitList);
-
-            _.each(omitList, function (omitKey) {
-                response[omitKey] = attributes[omitKey].toJSON();
-            });
         }
 
         return response;

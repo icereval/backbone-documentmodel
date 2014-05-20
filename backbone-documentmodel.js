@@ -11,6 +11,9 @@
     if (typeof define === 'function' && define.amd) {
         // AMD
         define(['underscore', 'backbone'], factory);
+    } else if (typeof exports !== 'undefined') {
+        // CommonJS / Node.js
+        module.exports = factory(require('underscore'), require('backbone'));
     } else {
         // globals
         factory(_, Backbone);

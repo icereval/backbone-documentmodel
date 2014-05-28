@@ -68,7 +68,7 @@
         return Backbone.Collection.prototype.set.call(this, models, options);
     }
 
-    function documentModelPrepeare(attrs, options) {
+    function documentModelPrepare(attrs, options) {
         _.extend(options, _.pick(this.idAttribute ? this : _.isObject(attrs) ? attrs : this, ['idAttribute']));
 
         // If we are parsing an array or values we'll need to generate a pseudoIdAttribute.
@@ -365,7 +365,7 @@
         set: documentCollectionSet,
         clone: documentClone,
         trigger: documentTrigger,
-        _prepareModel: documentModelPrepeare
+        _prepareModel: documentModelPrepare
     });
 
     //Exports

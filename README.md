@@ -307,7 +307,7 @@ user.on('remove:addresses', function () { ... });
 user.on('remove:*', function () { ... });
 ```
 
-## Custom models and collections for nested values
+## Custom Models and Collections for nested values
 
 If you need further control over what kind of Model & Collection objects get created for nested values, you can override
 the `getNestedModel` and / or `getNestedCollection` method of `Backbone.DocumentModel` subclasses. Both methods have the
@@ -326,7 +326,7 @@ The parameters:
 * `nestedValue` *object*: The value of `this` at `nestedKey`.
 * `nestedOptions` *object*: The constructor options for the resulting Model or Collection.
 
-You should always return an instance of `Backbone.DocumentModel` or `instanceof Backbone.DocumentCollection` respectively.
+You should always return an instance of `Backbone.DocumentModel` or `Backbone.DocumentCollection` respectively.
 You should avoid modifications on any of the passed objects.
 
 ```javascript

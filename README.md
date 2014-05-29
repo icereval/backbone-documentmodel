@@ -373,7 +373,7 @@ User = Backbone.DocumentModel.extend({
             case 'name':
                 return new Name(nestedKey, nestedValue, nestedOptions);
             default:
-                return Backbone.DocumentModel.prototype.getNestedModel.call(this, nestedValue, nestedOptions);
+                return new Backbone.DocumentModel(nestedValue, nestedOptions);
         }
     },
 
@@ -383,7 +383,7 @@ User = Backbone.DocumentModel.extend({
             case 'addresses':
                 return new Addresses(nestedValue, nestedOptions);
             default:
-                return Backbone.DocumentModel.prototype.getNestedCollection.call(this, nestedValue, nestedOptions);
+                return new Backbone.DocumentCollection(nestedValue, nestedOptions);
         }
     }
 });

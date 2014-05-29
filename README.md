@@ -307,6 +307,100 @@ user.on('remove:addresses', function () { ... });
 user.on('remove:*', function () { ... });
 ```
 
+## Custom models and collections for nested values
+
+If you need further control over what kind of Model & Collection objects get created for nested values, you can override
+the `getNestedModel` and / or `getNestedCollection` method of `Backbone.DocumentModel` subclasses. Both methods have the
+same signature:
+
+```javascript
+// For nested models
+getNestedModel(nestedKey, nestedValue, nestedOptions)
+
+// For nested collections
+getNestedCollection(nestedKey, nestedValue, nestedOptions)
+```
+
+The parameters:
+* `nestedKey` *string*: The name of the nested property.
+* `nestedValue` *object*: The value of `this` at `nestedKey`.
+* `nestedOptions` *object*: The constructor options for the resulting Model or Collection.
+
+You should always return an instance of `Backbone.DocumentModel` or `instanceof Backbone.DocumentCollection` respectively.
+You should avoid modifications on any of the passed objects.
+
+```javascript
+user = {
+    name: {
+        first: 'John',
+        last: 'Doe',
+        middle: {
+            initial: 'Z'
+        }
+    },
+    addresses: [
+        { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
+        { type: 'Billing', city: 'Prescott', state: 'AZ' }
+    ],
+    items: [123, 456]
+};
+
+// The model for the 'name' object
+Name = Backbone.DocumentModel.extend({
+    getFullName: function () {
+        return this.get('first').concat(' ', this.get('middle').get('initial'), ' ', this.get('last'));
+    }
+});
+
+// The model for items of 'adresses'
+Address = Backbone.DocumentModel.extend({
+    getFullAddress: function () {
+        return this.get('city').concat(', ', this.get('state'));
+    }
+});
+
+// The 'adresses' collection
+Addresses = Backbone.DocumentCollection({
+    model: Address
+});
+
+// The 'user' object
+User = Backbone.DocumentModel.extend({
+
+    // For models
+    getNestedModel: function (nestedKey, nestedValue, nestedOptions) {
+        switch (nestedKey) {
+            case 'name':
+                return new Name(nestedKey, nestedValue, nestedOptions);
+            default:
+                return Backbone.DocumentModel.prototype.getNestedModel.call(this, nestedValue, nestedOptions);
+        }
+    },
+
+    // For collections
+    getNestedCollection: function (nestedKey, nestedValue, nestedOptions) {
+        switch (nestedKey) {
+            case 'addresses':
+                return new Addresses(nestedValue, nestedOptions);
+            default:
+                return Backbone.DocumentModel.prototype.getNestedCollection.call(this, nestedValue, nestedOptions);
+        }
+    }
+});
+
+john = new User(user);
+
+john.get('name').getFullName();
+// John Z Doe
+
+john.get('addresses.0').getFullAddress();
+// Charlottesville, VA
+```
+
+If you want to create different Model objects for items in a DocumentCollection, refer to the
+[Backbone.js docs](http://backbonejs.org/#Collection-model). It's actually a core feature.
+
+
 ## Changelog
 
 #### 0.6.4

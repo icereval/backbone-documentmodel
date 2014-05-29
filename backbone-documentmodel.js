@@ -19,6 +19,16 @@
         factory(_, Backbone);
     }
 }(function (_, Backbone) {
+    // Can get overridden to determine the nested model class based on passed values.
+    function documentModelGetNestedModel(nestedKey, value, options) {
+        return new Backbone.DocumentModel(value, options);
+    }
+
+    // Can get overridden to determine the nested collection class based on passed values.
+    function documentModelGetNestedCollection(nestedKey, value, options) {
+        return new Backbone.DocumentCollection(value, options);
+    }
+
     function documentCollectionGet(obj) {
         if (this.pseudoIdAttribute) {
             return this.findWhere({value: obj});
@@ -165,7 +175,7 @@
             // Handle Nested Attribute Creation - ex: { name: { first: 'Joe' } }
             _.each(_.keys(nestedAttrs), function (nestedAttrKey) {
                 var nestedOptions;
-                var nestedValue = nestedAttrs[nestedAttrKey]
+                var nestedValue = nestedAttrs[nestedAttrKey];
                 // If the attribute already exists, merge the objects.
                 if (this.attributes[nestedAttrKey]) {
                     this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
@@ -176,7 +186,7 @@
 
                     if (_.isArray(nestedValue)) {
                         // Collection
-                        Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentCollection(nestedValue, nestedOptions), options);
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, this.getNestedCollection(nestedAttrKey, nestedValue, nestedOptions), options);
                     }  else {
                         // Model
                         if (this instanceof Backbone.DocumentModel) {
@@ -195,7 +205,7 @@
                                 // This is required for patching updates and will be omitted on JSON build.
                                 nestedValue[this.idAttribute] = this.get(this.idAttribute);
                                 nestedOptions.pseudoIdAttribute = true;
-                                Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentModel(nestedValue, nestedOptions), options);
+                                Backbone.Model.prototype.set.call(this, nestedAttrKey, this.getNestedModel(nestedAttrKey, nestedValue, nestedOptions), options);
                             }
                         }
                     }
@@ -328,7 +338,8 @@
     var DocumentModel = Backbone.Model.extend({
         constructor: function (models, options) {
             options || (options = {});
-            _.extend(this, _.pick(options, ['idAttribute', 'parent', 'name', 'pseudoIdAttribute']));
+            _.extend(this, _.pick(options, ['idAttribute', 'parent', 'name', 'pseudoIdAttribute',
+                'getNestedModel', 'getNestedCollection']));
             Backbone.Model.apply(this, arguments);
 
             this.on('all', function () {
@@ -343,7 +354,9 @@
         set: documentModelSet,
         save: documentSave,
         clone: documentClone,
-        trigger: documentTrigger
+        trigger: documentTrigger,
+        getNestedModel: documentModelGetNestedModel,
+        getNestedCollection: documentModelGetNestedCollection
     });
 
     var DocumentCollection = Backbone.Collection.extend({

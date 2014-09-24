@@ -1444,4 +1444,208 @@ $(document).ready(function() {
         equal(model.get('addresses.1.state'), 'OR');
         equal(model.get('addresses.1.city'), 'Portland');
     });
+
+    test("#4 - setting nested array to existing model", 5, function () {
+        var model = new Backbone.DocumentModel({items:[]});
+        model.set('items', [[1],[2]]);
+
+        // Backbone Model [M], Collection [C] and Attribute [A]
+        // model [M]
+        //   - items [C]
+        //     - 0 [M]
+        //       - value [C]
+        //         - 0 [M]
+        //           - value [A]
+        //     - 1 [M]
+        //       - value [C]
+        //         - 0 [M]
+        //           - value [A]
+        //
+        // Requires the use of pseudo attributes as there is no 'named' anchor point other than the array index.
+        // model.get('items.0.0') === 1
+        //            C     C A <-- inflection should occur so Model's 'value' is resolved to the Collection or Attribute
+        //
+        // model.get('items.0.value.0.value')
+        //            C    [M C]   [M A]
+
+        equal(model.get('items.0') instanceof Backbone.Model, false);
+        equal(model.get('items.0') instanceof Backbone.Collection, true);
+        equal(model.get('items.0.0') instanceof Backbone.Model, false);
+        equal(model.get('items.0.0') instanceof Backbone.Collection, false);
+        equal(model.get('items.0.0'), 1);
+    });
+
+    test("#5 - incorrect processing of wrapped primitives", 12, function () {
+        // Note: isEqual will result true when comparing a primitive to wrapped object
+        // https://github.com/jashkenas/underscore/pull/351
+
+        var model = new Backbone.DocumentModel({
+            foo: new Date('1/1/2010 1:57:39')
+        });
+
+        equal(_.isEqual(model.get('foo'), '1/1/2010 1:57:39'), false);
+        equal(_.isEqual(model.get('foo'), new Date('1/1/2010 1:57:39')), true);
+        equal(_.isEqual(model.toJSON(), { foo: new Date('1/1/2010 1:57:39') }), true);
+
+        model = new Backbone.DocumentModel({
+            foo: new Boolean(true)
+        });
+
+        equal(_.isEqual(model.get('foo'), true), true);
+        equal(_.isEqual(model.get('foo'), new Boolean(true)), true);
+        equal(_.isEqual(model.toJSON(), { foo: new Boolean(true) }), true);
+
+        model = new Backbone.DocumentModel({
+            foo: new Number(1234)
+        });
+
+        equal(_.isEqual(model.get('foo'), 1234), true);
+        equal(_.isEqual(model.get('foo'), new Number(1234)), true);
+        equal(_.isEqual(model.toJSON(), { foo: new Number(1234) }), true);
+
+        model = new Backbone.DocumentModel({
+            foo: new String('wrapped primitive')
+        });
+
+        equal(_.isEqual(model.get('foo'), 'wrapped primitive'), true);
+        equal(_.isEqual(model.get('foo'), new String('wrapped primitive')), true);
+        equal(_.isEqual(model.toJSON(), { foo: new String('wrapped primitive') }), true);
+    });
+
+    test("#7 - strange output on nested collection models tojson()", 3, function () {
+        var model = new Backbone.DocumentModel({
+            emails : ['foo@bar.com', 'whiz@foo.foo', 'haha@lol.joke']
+        });
+
+        model.get('emails').each(function (eml) {
+            equal(eml.get('value'), eml.toJSON());
+        });
+    });
+
+    test('#14 - Custom classes for nested models and collections', 10, function() {
+
+        var Name = Backbone.DocumentModel.extend({
+            getFullName: function() {
+                return (this.get('firstName') || 'Unknown').concat(' ', (this.get('lastName') || ''));
+            }
+        });
+
+        var NonHuman = Backbone.DocumentModel.extend({
+            serialNumber: function() {
+                return '3PO';
+            }
+        });
+
+        var Friends = Backbone.DocumentCollection.extend({
+            model: function(attrs, options) {
+                return attrs.type !== 'human' ? new NonHuman(attrs, options) : new Backbone.DocumentModel(attrs, options);
+            }
+        });
+
+        var Protagonist = Backbone.DocumentModel.extend({
+            getNestedModel: function(key, values, options) {
+                if (key === 'name')
+                    return new Name(values, options);
+                return new Backbone.DocumentModel(values, options);
+            },
+            getNestedCollection: function(key, values, options) {
+                if (key === 'friends')
+                    return new Friends(values, options);
+                return new Backbone.DocumentCollection(values, options);
+            }
+        });
+
+        var model = new Protagonist({
+            name: {
+                firstName: 'Luke',
+                lastName: 'Skywalker'
+            },
+            friends: [
+                {
+                    name: 'Han Solo',
+                    type: 'human'
+                },
+                {
+                    name: '3PO',
+                    type: 'droid'
+                }
+            ]
+        });
+
+        equal(model.getNestedModel('name') instanceof Name, true);
+        equal(model.getNestedModel('foo') instanceof Backbone.DocumentModel, true);
+        equal(model.get('name') instanceof Name, true);
+        equal(model.get('name').getFullName(), 'Luke Skywalker');
+
+        equal(model.getNestedCollection('friends') instanceof Friends, true);
+        equal(model.getNestedCollection('foo') instanceof Backbone.DocumentCollection, true);
+        equal(model.get('friends') instanceof Friends, true);
+
+        equal(model.get('friends').at(0) instanceof Backbone.DocumentModel, true);
+        equal(model.get('friends').at(1) instanceof NonHuman, true);
+        equal(model.get('friends').at(1).serialNumber(), '3PO');
+
+    });
+
+    test("#14 - readme.md - Custom models and collections for nested values", 5, function() {
+        var user = {
+            name: {
+                first: 'John',
+                last: 'Doe',
+                middle: {
+                    initial: 'Z'
+                }
+            },
+            addresses: [
+                { type: 'Shipping', city: 'Charlottesville', state: 'VA' },
+                { type: 'Billing', city: 'Prescott', state: 'AZ' }
+            ],
+            items: [123, 456]
+        };
+
+        // The model for the 'name' object
+        var Name = Backbone.DocumentModel.extend({
+            getFullName: function () {
+                return this.get('first').concat(' ', this.get('middle').get('initial'), ' ', this.get('last'));
+            }
+        });
+
+        // The model for items of 'adresses'
+        var Address = Backbone.DocumentModel.extend({
+            getFullAddress: function () {
+                return this.get('city').concat(', ', this.get('state'));
+            }
+        });
+
+        // The 'adresses' collection
+        var Addresses = Backbone.DocumentCollection.extend({
+            model: Address
+        });
+
+        // The 'user' object
+        var User = Backbone.DocumentModel.extend({
+
+            // For models
+            getNestedModel: function (nestedKey, nestedValue, nestedOptions) {
+                if (nestedKey ==='name')
+                    return new Name(nestedValue, nestedOptions);
+                return new Backbone.DocumentModel(nestedValue, nestedOptions);
+            },
+
+            // For collections
+            getNestedCollection: function (nestedKey, nestedValue, nestedOptions) {
+                if (nestedKey === 'addresses')
+                        return new Addresses(nestedValue, nestedOptions);
+                return new Backbone.DocumentCollection(nestedValue, nestedOptions);
+            }
+        });
+
+        var john = new User(user);
+
+        equal(john.get('name').getFullName(), 'John Z Doe');
+        equal(john.get('name') instanceof Name, true);
+        equal(john.get('addresses.0').getFullAddress(), 'Charlottesville, VA');
+        equal(john.get('addresses.0') instanceof Address, true);
+        equal(john.get('addresses') instanceof Addresses, true);
+    });
 });

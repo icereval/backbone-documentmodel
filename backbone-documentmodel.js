@@ -1,6 +1,6 @@
 /**
  *
- * Backbone-DocumentModel v0.6.0
+ * Backbone-DocumentModel v0.6.4
  *
  * Copyright (c) 2013 Michael Haselton & Aaron Herres, Loqwai LLC
  *
@@ -11,11 +11,24 @@
     if (typeof define === 'function' && define.amd) {
         // AMD
         define(['underscore', 'backbone'], factory);
+    } else if (typeof exports !== 'undefined') {
+        // CommonJS / Node.js
+        module.exports = factory(require('underscore'), require('backbone'));
     } else {
         // globals
         factory(_, Backbone);
     }
 }(function (_, Backbone) {
+    // Can get overridden to determine the nested model class based on passed values.
+    function documentModelGetNestedModel(nestedKey, value, options) {
+        return new Backbone.DocumentModel(value, options);
+    }
+
+    // Can get overridden to determine the nested collection class based on passed values.
+    function documentModelGetNestedCollection(nestedKey, value, options) {
+        return new Backbone.DocumentCollection(value, options);
+    }
+
     function documentCollectionGet(obj) {
         if (this.pseudoIdAttribute) {
             return this.findWhere({value: obj});
@@ -43,6 +56,11 @@
                 parseIntProp = parseInt(prop, 10);
 
                 retVal = _.isFinite(parseIntProp) ? retVal.at(parseIntProp) : retVal.get(prop);
+
+                // If the value is a 'pseudo' object go ahead and retrieve its 'value' attribute.
+                if (retVal !== undefined && retVal.collection && retVal.collection.pseudoIdAttribute) {
+                    retVal = retVal.get('value');
+                }
             }
         }, this);
 
@@ -60,11 +78,12 @@
         return Backbone.Collection.prototype.set.call(this, models, options);
     }
 
-    function documentModelPrepeare(attrs, options) {
+    function documentModelPrepare(attrs, options) {
         _.extend(options, _.pick(this.idAttribute ? this : _.isObject(attrs) ? attrs : this, ['idAttribute']));
 
-        // If we are parsing an array of values we'll need to generate a pseudoIdAttribute.
-        if (!_.isObject(attrs)) {
+        // If we are parsing an array or values we'll need to generate a pseudoIdAttribute.
+        if (Object.prototype.toString.call(attrs) !== '[object Object]' || _.isArray(attrs)) {
+            // #5 - Ensure we do not omit wrapped primitives.
             var value = attrs;
 
             this.pseudoIdAttribute = true;
@@ -103,7 +122,8 @@
                 if (attrKey.indexOf('.') > 0) {
                     deepNamedAttrs[attrKey] = attrs[attrKey];
                     delete attrs[attrKey];
-                } else if (_.isObject(attrs[attrKey])) {
+                } else if (Object.prototype.toString.call(attrs[attrKey]) === '[object Object]' || _.isArray(attrs[attrKey])) {
+                    // #5 - Ensure we do not omit wrapped primitives.
                     nestedAttrs[attrKey] = attrs[attrKey];
                     delete attrs[attrKey];
                 }
@@ -155,7 +175,7 @@
             // Handle Nested Attribute Creation - ex: { name: { first: 'Joe' } }
             _.each(_.keys(nestedAttrs), function (nestedAttrKey) {
                 var nestedOptions;
-                var nestedValue = nestedAttrs[nestedAttrKey]
+                var nestedValue = nestedAttrs[nestedAttrKey];
                 // If the attribute already exists, merge the objects.
                 if (this.attributes[nestedAttrKey]) {
                     this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
@@ -166,7 +186,7 @@
 
                     if (_.isArray(nestedValue)) {
                         // Collection
-                        Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentCollection(nestedValue, nestedOptions), options);
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, this.getNestedCollection(nestedAttrKey, nestedValue, nestedOptions), options);
                     }  else {
                         // Model
                         if (this instanceof Backbone.DocumentModel) {
@@ -180,12 +200,12 @@
                                 }
                                 _.extend(nestedValue, nestedOptions);
                                 Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
-                            }else if (!nestedValue[this.idAttribute]) {
+                            } else if (!nestedValue[this.idAttribute]) {
                                 // If no id has was specified for the nested Model, use it's parent id.
                                 // This is required for patching updates and will be omitted on JSON build.
                                 nestedValue[this.idAttribute] = this.get(this.idAttribute);
                                 nestedOptions.pseudoIdAttribute = true;
-                                Backbone.Model.prototype.set.call(this, nestedAttrKey, new Backbone.DocumentModel(nestedValue, nestedOptions), options);
+                                Backbone.Model.prototype.set.call(this, nestedAttrKey, this.getNestedModel(nestedAttrKey, nestedValue, nestedOptions), options);
                             }
                         }
                     }
@@ -217,22 +237,27 @@
             var attributes = this.attributes;
             response = {};
 
-            _.each(_.keys(attributes), function (attrKey) {
-                if (attributes[attrKey] instanceof Backbone.Model || attributes[attrKey] instanceof Backbone.Collection) {
-                    omitList.push(attrKey);
+            // #7 - Strange output on nested collection models toJSON()
+            if (this.collection && this.collection.pseudoIdAttribute) {
+                response = this.get('value');
+            } else {
+                _.each(_.keys(attributes), function (attrKey) {
+                    if (attributes[attrKey] instanceof Backbone.Model || attributes[attrKey] instanceof Backbone.Collection) {
+                        omitList.push(attrKey);
+                    }
+                });
+
+                // clear pseudo parent id reference.
+                if (this.pseudoIdAttribute) {
+                    delete attributes[this.idAttribute];
                 }
-            });
 
-            // clear pseudo parent id reference.
-            if (this.pseudoIdAttribute) {
-                delete attributes[this.idAttribute];
+                response = _.omit(attributes, omitList);
+
+                _.each(omitList, function (omitKey) {
+                    response[omitKey] = attributes[omitKey].toJSON();
+                });
             }
-
-            response = _.omit(attributes, omitList);
-
-            _.each(omitList, function (omitKey) {
-                response[omitKey] = attributes[omitKey].toJSON();
-            });
         }
 
         return response;
@@ -313,7 +338,8 @@
     var DocumentModel = Backbone.Model.extend({
         constructor: function (models, options) {
             options || (options = {});
-            _.extend(this, _.pick(options, ['idAttribute', 'parent', 'name', 'pseudoIdAttribute']));
+            _.extend(this, _.pick(options, ['idAttribute', 'parent', 'name', 'pseudoIdAttribute',
+                'getNestedModel', 'getNestedCollection']));
             Backbone.Model.apply(this, arguments);
 
             this.on('all', function () {
@@ -328,7 +354,9 @@
         set: documentModelSet,
         save: documentSave,
         clone: documentClone,
-        trigger: documentTrigger
+        trigger: documentTrigger,
+        getNestedModel: documentModelGetNestedModel,
+        getNestedCollection: documentModelGetNestedCollection
     });
 
     var DocumentCollection = Backbone.Collection.extend({
@@ -350,7 +378,7 @@
         set: documentCollectionSet,
         clone: documentClone,
         trigger: documentTrigger,
-        _prepareModel: documentModelPrepeare
+        _prepareModel: documentModelPrepare
     });
 
     //Exports

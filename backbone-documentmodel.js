@@ -227,9 +227,10 @@
             _.each(_.keys(models), function (modelKey) {
                 var modelValues = models[modelKey].toJSON();
 
-                if (this.pseudoIdAttribute) {
-                    modelValues = modelValues.value;
-                }
+//redundancy with  #7 - below. commenting out seems to work and not disturb the other tests
+//                if (this.pseudoIdAttribute) {
+//                    modelValues = modelValues.value;
+//                }
 
                 response.push(modelValues);
             }, this);

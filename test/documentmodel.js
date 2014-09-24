@@ -1522,6 +1522,20 @@ $(document).ready(function() {
         });
     });
 
+    
+    test("#7 - strange output on nested collection models tojson() redux (AKA the actual useful test)", 4, function () {
+        var emails = ['foo@bar.com', 'whiz@foo.foo', 'haha@lol.joke'];
+    	var model = new Backbone.DocumentModel({
+            emails : emails
+        });
+    	var json = model.toJSON();
+    	_.each(json.emails, function(eml, i){
+    		 equal(emails[i], eml);
+    	});
+    	
+    	deepEqual(emails, json.emails);
+    });
+    
     test('#14 - Custom classes for nested models and collections', 10, function() {
 
         var Name = Backbone.DocumentModel.extend({

@@ -200,11 +200,13 @@
                                 }
                                 _.extend(nestedValue, nestedOptions);
                                 Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
-                            } else if (!nestedValue[this.idAttribute]) {
-                                // If no id has was specified for the nested Model, use it's parent id.
-                                // This is required for patching updates and will be omitted on JSON build.
-                                nestedValue[this.idAttribute] = this.get(this.idAttribute);
-                                nestedOptions.pseudoIdAttribute = true;
+                            } else {
+                                if (!nestedValue[this.idAttribute]) {
+                                    // If no id has was specified for the nested Model, use it's parent id.
+                                    // This is required for patching updates and will be omitted on JSON build.
+                                    nestedValue[this.idAttribute] = this.get(this.idAttribute);
+                                    nestedOptions.pseudoIdAttribute = true;
+                                }
                                 Backbone.Model.prototype.set.call(this, nestedAttrKey, this.getNestedModel(nestedAttrKey, nestedValue, nestedOptions), options);
                             }
                         }

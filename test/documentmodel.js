@@ -1662,4 +1662,58 @@ $(document).ready(function() {
         equal(john.get('addresses.0') instanceof Address, true);
         equal(john.get('addresses') instanceof Addresses, true);
     });
+    
+    
+    
+    
+    
+    test("issue#22 - calling set multiple times on a model with a nested collection of primitives", 9, function () {
+    
+    	
+    	var Job = Backbone.DocumentModel.extend({
+			 className : 'Job',
+		});
+    	
+    	var json1 = {
+				"objectId": "545c8659e7e0a59538543a79",
+				"jobTasksByDate": [
+					"task1"
+				]
+			};
+		var json2 = {
+				"objectId": "545c8659e7e0a59538543a79",
+				"jobTasksByDate": [
+					"task2"
+				]
+			};
+		var json3 = {
+				"objectId": "545c8659e7e0a59538543a79",
+				"jobTasksByDate": [
+					"task3"
+				]
+			};
+		
+		
+		var j = new Job(json1);
+		equal(j.get('jobTasksByDate').length, 1);
+		equal(j.get('jobTasksByDate').at(0).get('value'), 'task1');
+		equal(j.toJSON().jobTasksByDate[0], 'task1');
+		
+		j.set(json2);
+		equal(j.get('jobTasksByDate').length, 1);
+		equal(j.get('jobTasksByDate').at(0).get('value'), 'task2');
+		equal(j.toJSON().jobTasksByDate[0], 'task2');
+		
+		j.set(json3);
+		equal(j.get('jobTasksByDate').length, 1);
+		equal(j.get('jobTasksByDate').at(0).get('value'), 'task3');
+		equal(j.toJSON().jobTasksByDate[0], 'task3');
+
+    });
+    
+    
+    
+    
+    
+    
 });

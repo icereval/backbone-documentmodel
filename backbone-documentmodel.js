@@ -30,9 +30,19 @@
     }
 
     function documentCollectionGet(obj) {
-        if (this.pseudoIdAttribute) {
-            return this.findWhere({value: obj});
+    	
+    	if (this.pseudoIdAttribute) {
+        	if(obj && obj instanceof Backbone.DocumentModel ){
+        		return this.findWhere({id : obj.get(this.idAttribute),  value: obj.get('value')});
+        	}else{
+        		return this.findWhere({value: obj});
+        	}
         }
+
+//broken when calling set multiple times on a model that has a nested collection of primitives ( see issue #22 )     	
+//        if (this.pseudoIdAttribute) {
+//            return this.findWhere({value: obj});
+//        }
 
         return Backbone.Collection.prototype.get.call(this, obj);
     }

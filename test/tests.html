@@ -1,0 +1,96 @@
+<html>
+	<head>
+	
+		
+	
+	</head>
+		
+		
+	<body>
+
+
+
+
+
+
+		<script type="text/javascript" src="vendor/jquery.js"></script>
+		<script type="text/javascript" src="vendor/underscore.js"></script>
+		<script type="text/javascript" src="vendor/backbone.js"></script>
+		<script type="text/javascript" src="../backbone-documentmodel.js"></script>
+		
+		
+		
+		
+		
+		<script type="text/javascript">
+		Array.prototype.remove = function(from, to) {
+			var t = this;
+			var fnc = this.slice;
+			debugger;
+		  var rest = this.slice( (to || from) + 1 || this.length);
+		  this.length = from < 0 ? this.length + from : from;
+		  return this.push.apply(this, rest);
+		};
+		
+		
+		
+		
+		
+			$(document).ready(function() {
+				  var expectedEmails = ['foo@bar.com', 'whiz@foo.foo', 'haha@lol.joke'];
+				    
+				var rawModel = {
+						name : "myName",
+						emails : ['foo@bar.com', 'whiz@foo.foo', 'haha@lol.joke']
+				}
+				
+				var model = new Backbone.DocumentModel( rawModel );
+				
+				console.error("model = ");
+				console.error(model);
+				
+				console.error("model.get(emails) = ");
+				console.error(model.get("emails"));
+				
+				console.error("---------------------- emails list ----------------------------------");
+				model.get('emails').each(function(eml){
+					console.error("eml = " + eml);	
+					console.error(eml);
+				});
+				console.error("---------------------- ----------------------------------");
+				
+				
+				
+				var m2sjon = model.toJSON();
+				console.error("model.toJSON --> ");
+				console.error(m2sjon);
+				
+				console.error("model.toJSON.emails --> ");
+				console.error(m2sjon.emails);
+				
+				
+				
+				
+				
+				
+				var json = model.toJSON();
+		    	_.each(json.emails, function(eml, i){
+		    		console.error("eml : " + eml + " expectedEmails[i] : " + expectedEmails[i]);
+// 		    		 equal(expectedEmails[i], eml);
+		    	});
+		    	
+		    	
+		    	
+		    	
+		    	
+			});
+		
+		</script>
+		
+		
+		
+	</body>
+
+
+</html>
+

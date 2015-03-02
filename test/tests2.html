@@ -1,0 +1,65 @@
+<html>
+	<head>
+	
+		
+	
+	</head>
+		
+		
+	<body>
+
+
+
+
+
+
+		<script type="text/javascript" src="vendor/jquery.js"></script>
+		<script type="text/javascript" src="vendor/underscore.js"></script>
+		<script type="text/javascript" src="vendor/backbone.js"></script>
+		<script type="text/javascript" src="../backbone-documentmodel.js"></script>
+		
+		
+		
+		
+		
+		<script type="text/javascript">
+		Array.prototype.remove = function(from, to) {
+			var t = this;
+			var fnc = this.slice;
+			debugger;
+		  var rest = this.slice( (to || from) + 1 || this.length);
+		  this.length = from < 0 ? this.length + from : from;
+		  return this.push.apply(this, rest);
+		};
+		
+		
+		
+		
+		
+			$(document).ready(function() {
+				
+				var ChildCollection = Backbone.DocumentCollection.extend({
+					 className : 'ChildCollection',
+				});
+				
+				var ParentObj = Backbone.DocumentModel.extend({
+					 className : 'ParentObj',
+				});
+				
+				var childColl = new ChildCollection(['one', 'two', 'three']);
+				var parentObj = new ParentObj({myName:'mynamefoo', myColl : childColl});
+				
+				
+				
+				
+			});
+		
+		</script>
+		
+		
+		
+	</body>
+
+
+</html>
+

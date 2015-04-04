@@ -100,7 +100,8 @@
         var attrs,
             isBackboneObj,
             nestedAttrs = {},
-            deepNamedAttrs = {};
+            deepNamedAttrs = {},
+            otherAttrs = {};
 
         if (key == null) return this;
 
@@ -121,16 +122,20 @@
             _.each(_.keys(attrs), function (attrKey) {
                 if (attrKey.indexOf('.') > 0) {
                     deepNamedAttrs[attrKey] = attrs[attrKey];
-                    delete attrs[attrKey];
                 } else if (Object.prototype.toString.call(attrs[attrKey]) === '[object Object]' || _.isArray(attrs[attrKey])) {
                     // #5 - Ensure we do not omit wrapped primitives.
                     nestedAttrs[attrKey] = attrs[attrKey];
-                    delete attrs[attrKey];
+                }
+                else {
+                    // make a copy of the attrs with only the keys we need,
+                    // since deleting them from attrs would be a bit of a surprise for 
+                    // the people passing it in.
+                    otherAttrs[attrKey] = attrs[attrKey];
                 }
             });
         }
 
-        if (!Backbone.Model.prototype.set.call(this, attrs, options)) return false;
+        if (!Backbone.Model.prototype.set.call(this, otherAttrs, options)) return false;
 
         if (!isBackboneObj) {
             // Refactor Deep Named Attributes ( ex: { 'name.first': 'Joe' } ) into Objects/Arrays for nested attribute merge.

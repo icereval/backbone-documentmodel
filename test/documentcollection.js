@@ -1135,6 +1135,22 @@ $(document).ready(function() {
         ]);
     });
 
+    test("toJson on an array of primitives (using 'value' field of model)", 1, function() {
+        var data = 
+                // taken from a real-life example :)
+                [{
+                    name: "Dubstep Kit",
+                    categories: ["music"],
+                    platforms: ["osx", "win"],
+                    sensorConfigInputs: []
+                }],
+            col = new Backbone.DocumentCollection(data),
+            json = col.toJSON();
+
+        deepEqual(data, json);
+    });
+
+
     /*
     test("setting an object to existing model using an object", 4, function() {
         var model = new Backbone.DocumentModel({

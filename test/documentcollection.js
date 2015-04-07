@@ -1151,6 +1151,23 @@ $(document).ready(function() {
     });
 
 
+    test("toJson removes psuedoIdAttribute properly", 1, function() {
+        var data = 
+                // taken from a real-life example :)
+                [{
+                    name: "Dubstep Kit",
+                    author: {
+                        name: "DrumPants",
+                        url: "http://www.drumpants.com"
+                    },
+                    sensorConfigInputs: []
+                }],
+            col = new Backbone.DocumentCollection(data),
+            json = col.toJSON();
+
+        deepEqual(data, json);
+    });
+
     /*
     test("setting an object to existing model using an object", 4, function() {
         var model = new Backbone.DocumentModel({

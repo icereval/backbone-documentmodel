@@ -134,6 +134,10 @@
                 }
             });
         }
+        else {
+            // just set the model directly.
+            otherAttrs = attrs.attributes;
+        }
 
         if (!Backbone.Model.prototype.set.call(this, otherAttrs, options)) return false;
 

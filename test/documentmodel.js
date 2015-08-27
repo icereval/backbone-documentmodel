@@ -1648,4 +1648,27 @@ $(document).ready(function() {
         equal(john.get('addresses.0') instanceof Address, true);
         equal(john.get('addresses') instanceof Addresses, true);
     });
+
+
+
+    test("calling set() with a model.", 4, function() {
+        var custom = {
+                hello: 'there',
+                how: [
+                    'are you?',
+                    'is it going?'
+                  ]
+            },
+            model = new Backbone.DocumentModel({
+                'custom': custom
+            }),
+            customModel = model.get('custom'),
+            newCustomModel = new Backbone.DocumentModel(custom);
+
+        deepEqual(customModel.toJSON(), custom);
+
+        model.set('custom', newCustomModel);
+
+        deepEqual(customModel.toJSON(), custom);
+    });
 });

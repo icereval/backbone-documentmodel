@@ -82,7 +82,7 @@
         _.extend(options, _.pick(this.idAttribute ? this : _.isObject(attrs) ? attrs : this, ['idAttribute']));
 
         // If we are parsing an array or values we'll need to generate a pseudoIdAttribute.
-        if (Object.prototype.toString.call(attrs) !== '[object Object]' || _.isArray(attrs)) {
+        if (typeof(attrs) !== 'undefined' && Object.prototype.toString.call(attrs) !== '[object Object]' || _.isArray(attrs)) {
             // #5 - Ensure we do not omit wrapped primitives.
             var value = attrs;
 

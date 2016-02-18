@@ -221,18 +221,23 @@
             response;
 
         if (this instanceof Backbone.Collection) {
-            var models = this.models;
+            var models = this.models,
+                modelValues;
+
             response = [];
 
-            _.each(_.keys(models), function (modelKey) {
-                var modelValues = models[modelKey].toJSON();
+            _.each(_.keys(models), function (modelKey, i) {
+                modelValues = models[modelKey].toJSON();
 
-                if (this.pseudoIdAttribute) {
-                    modelValues = modelValues.value;
+                // Check that model has pseudoIdAttribute AND the value isn't undefined
+                if (this.pseudoIdAttribute && modelValues.value) {
+                    modelValues[i] = modelValues.value;
                 }
 
                 response.push(modelValues);
+
             }, this);
+
         } else if (this instanceof Backbone.Model && this.attributes) {
             var attributes = this.attributes;
             response = {};

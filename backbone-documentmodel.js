@@ -186,7 +186,9 @@
                 var nestedOptions;
                 var nestedValue = nestedAttrs[nestedAttrKey];
                 // If the attribute already exists, merge the objects.
-                if (this.attributes[nestedAttrKey]) {
+                // this causes a duplicate array elements bug if you try to set an array when an array is already there!
+                // so don't merge if we're adding an array.
+                if (this.attributes[nestedAttrKey] && !_.isArray(nestedValue)) {
                     this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
                 } else {
                     nestedOptions = { parent: this };

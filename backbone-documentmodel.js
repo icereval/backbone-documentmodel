@@ -198,7 +198,11 @@
                     if (_.isArray(nestedValue)) {
                         // Collection
                         Backbone.Model.prototype.set.call(this, nestedAttrKey, this.getNestedCollection(nestedAttrKey, nestedValue, nestedOptions), options);
-                    }  else {
+                    } else if (nestedValue instanceof Backbone.Collection) {
+                        // Collection
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
+                    } 
+                    else {
                         // Model
                         if (this instanceof Backbone.DocumentModel) {
                             // Model -> Model

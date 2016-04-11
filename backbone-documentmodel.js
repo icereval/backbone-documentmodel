@@ -82,7 +82,7 @@
         _.extend(options, _.pick(this.idAttribute ? this : _.isObject(attrs) ? attrs : this, ['idAttribute']));
 
         // If we are parsing an array or values we'll need to generate a pseudoIdAttribute.
-        if (Object.prototype.toString.call(attrs) !== '[object Object]' || _.isArray(attrs)) {
+        if (typeof(attrs) !== 'undefined' && Object.prototype.toString.call(attrs) !== '[object Object]' || _.isArray(attrs)) {
             // #5 - Ensure we do not omit wrapped primitives.
             var value = attrs;
 
@@ -100,7 +100,8 @@
         var attrs,
             isBackboneObj,
             nestedAttrs = {},
-            deepNamedAttrs = {};
+            deepNamedAttrs = {},
+            otherAttrs = {};
 
         if (key == null) return this;
 
@@ -121,16 +122,24 @@
             _.each(_.keys(attrs), function (attrKey) {
                 if (attrKey.indexOf('.') > 0) {
                     deepNamedAttrs[attrKey] = attrs[attrKey];
-                    delete attrs[attrKey];
                 } else if (Object.prototype.toString.call(attrs[attrKey]) === '[object Object]' || _.isArray(attrs[attrKey])) {
                     // #5 - Ensure we do not omit wrapped primitives.
                     nestedAttrs[attrKey] = attrs[attrKey];
-                    delete attrs[attrKey];
+                }
+                else {
+                    // make a copy of the attrs with only the keys we need,
+                    // since deleting them from attrs would be a bit of a surprise for 
+                    // the people passing it in.
+                    otherAttrs[attrKey] = attrs[attrKey];
                 }
             });
         }
+        else {
+            // just set the model directly.
+            otherAttrs = attrs.attributes;
+        }
 
-        if (!Backbone.Model.prototype.set.call(this, attrs, options)) return false;
+        if (!Backbone.Model.prototype.set.call(this, otherAttrs, options)) return false;
 
         if (!isBackboneObj) {
             // Refactor Deep Named Attributes ( ex: { 'name.first': 'Joe' } ) into Objects/Arrays for nested attribute merge.
@@ -177,7 +186,9 @@
                 var nestedOptions;
                 var nestedValue = nestedAttrs[nestedAttrKey];
                 // If the attribute already exists, merge the objects.
-                if (this.attributes[nestedAttrKey]) {
+                // this causes a duplicate array elements bug if you try to set an array when an array is already there!
+                // so don't merge if we're adding an array.
+                if (this.attributes[nestedAttrKey] && !_.isArray(nestedValue)) {
                     this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
                 } else {
                     nestedOptions = { parent: this };
@@ -187,7 +198,11 @@
                     if (_.isArray(nestedValue)) {
                         // Collection
                         Backbone.Model.prototype.set.call(this, nestedAttrKey, this.getNestedCollection(nestedAttrKey, nestedValue, nestedOptions), options);
-                    }  else {
+                    } else if (nestedValue instanceof Backbone.Collection) {
+                        // Collection
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
+                    } 
+                    else {
                         // Model
                         if (this instanceof Backbone.DocumentModel) {
                             // Model -> Model
@@ -227,7 +242,7 @@
             _.each(_.keys(models), function (modelKey) {
                 var modelValues = models[modelKey].toJSON();
 
-                if (this.pseudoIdAttribute) {
+                if (this.pseudoIdAttribute && modelValues && typeof(modelValues.value) != 'undefined') {
                     modelValues = modelValues.value;
                 }
 

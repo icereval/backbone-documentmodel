@@ -346,7 +346,7 @@
             options = val;
         }
 
-        if (_.has(options, 'preventBubble') && options.preventBubble) {
+        if (options && _.has(options, 'preventBubble') && options.preventBubble) {
             delete options.preventBubble;
         } else {
             // ensure save is executed from the highest document model.

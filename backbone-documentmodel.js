@@ -346,13 +346,13 @@
             options = val;
         }
 
-        if (options.preventBubble == null) {
+        if (_.has(options, 'preventBubble') && options.preventBubble) {
+            delete options.preventBubble;
+        } else {
             // ensure save is executed from the highest document model.
             while (obj.parent || (obj.collection && obj.collection.parent)) {
                 obj = obj.parent || obj.collection.parent;
             }
-        } else {
-            delete options.preventBubble;
         }
 
         return Backbone.Model.prototype.save.call(obj, key, val, options);

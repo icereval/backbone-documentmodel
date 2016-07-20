@@ -334,11 +334,25 @@
     }
 
     function documentSave(key, val, options) {
-        // ensure save is executed from the highest document model.
         var obj = this;
 
-        while (obj.parent || (obj.collection && obj.collection.parent)) {
-            obj = obj.parent || obj.collection.parent;
+        // Not sure about this, Backbone.Model doesn't check val != null.
+        // OTOH, overriding model.save() with
+        //     function(key, val, options) {
+        //         return Backbone.DocumentModel.prototype.save.call(this, key, val, { preventBubble: true });
+        //     }
+        // and calling it without arguments makes it necessary.
+        if ((key == null && val != null) || typeof key === 'object') {
+            options = val;
+        }
+
+        if (options.preventBubble == null) {
+            // ensure save is executed from the highest document model.
+            while (obj.parent || (obj.collection && obj.collection.parent)) {
+                obj = obj.parent || obj.collection.parent;
+            }
+        } else {
+            delete options.preventBubble;
         }
 
         return Backbone.Model.prototype.save.call(obj, key, val, options);

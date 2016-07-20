@@ -178,7 +178,18 @@
                 var nestedValue = nestedAttrs[nestedAttrKey];
                 // If the attribute already exists, merge the objects.
                 if (this.attributes[nestedAttrKey]) {
-                    this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
+                    if (this.attributes[nestedAttrKey] instanceof Backbone.Model ||
+                        this.attributes[nestedAttrKey] instanceof Backbone.Collection) {
+                        this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
+                    } else {
+                        // It's not a Model or a Collection, which means it was probably overriden
+                        // using getNestedModel/getNestedCollection; just set the value.
+                        //
+                        // TODO: While this should work for simple cases (e.g. Array instead of Collection)
+                        // we should probably call getNestedModel/getNestedCollection to check what's really
+                        // going on.
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
+                    }
                 } else {
                     nestedOptions = { parent: this };
                     _.extend(nestedOptions, _.pick(this, ['idAttribute']));

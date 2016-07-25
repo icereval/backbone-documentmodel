@@ -342,7 +342,8 @@
         //         return Backbone.DocumentModel.prototype.save.call(this, key, val, { preventBubble: true });
         //     }
         // and calling it without arguments makes it necessary.
-        if ((key == null && val != null) || typeof key === 'object') {
+        // TODO: this is broken, FIXME
+        if ((key == null && val != null) || _.isObject(key)) {
             options = val;
         }
 

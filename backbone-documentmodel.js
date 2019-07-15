@@ -178,7 +178,18 @@
                 var nestedValue = nestedAttrs[nestedAttrKey];
                 // If the attribute already exists, merge the objects.
                 if (this.attributes[nestedAttrKey]) {
-                    this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
+                    if (this.attributes[nestedAttrKey] instanceof Backbone.Model ||
+                        this.attributes[nestedAttrKey] instanceof Backbone.Collection) {
+                        this.attributes[nestedAttrKey].set.call(this.attributes[nestedAttrKey], nestedValue, options);
+                    } else {
+                        // It's not a Model or a Collection, which means it was probably overriden
+                        // using getNestedModel/getNestedCollection; just set the value.
+                        //
+                        // TODO: While this should work for simple cases (e.g. Array instead of Collection)
+                        // we should probably call getNestedModel/getNestedCollection to check what's really
+                        // going on.
+                        Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
+                    }
                 } else {
                     nestedOptions = { parent: this };
                     _.extend(nestedOptions, _.pick(this, ['idAttribute']));
@@ -200,11 +211,13 @@
                                 }
                                 _.extend(nestedValue, nestedOptions);
                                 Backbone.Model.prototype.set.call(this, nestedAttrKey, nestedValue, options);
-                            } else if (!nestedValue[this.idAttribute]) {
-                                // If no id has was specified for the nested Model, use it's parent id.
-                                // This is required for patching updates and will be omitted on JSON build.
-                                nestedValue[this.idAttribute] = this.get(this.idAttribute);
-                                nestedOptions.pseudoIdAttribute = true;
+                            } else {
+                                if (!nestedValue[this.idAttribute]) {
+                                    // If no id has was specified for the nested Model, use it's parent id.
+                                    // This is required for patching updates and will be omitted on JSON build.
+                                    nestedValue[this.idAttribute] = this.get(this.idAttribute);
+                                    nestedOptions.pseudoIdAttribute = true;
+                                }
                                 Backbone.Model.prototype.set.call(this, nestedAttrKey, this.getNestedModel(nestedAttrKey, nestedValue, nestedOptions), options);
                             }
                         }
@@ -326,11 +339,26 @@
     }
 
     function documentSave(key, val, options) {
-        // ensure save is executed from the highest document model.
         var obj = this;
 
-        while (obj.parent || (obj.collection && obj.collection.parent)) {
-            obj = obj.parent || obj.collection.parent;
+        // Not sure about this, Backbone.Model doesn't check val != null.
+        // OTOH, overriding model.save() with
+        //     function(key, val, options) {
+        //         return Backbone.DocumentModel.prototype.save.call(this, key, val, { preventBubble: true });
+        //     }
+        // and calling it without arguments makes it necessary.
+        // TODO: this is broken, FIXME
+        if ((key == null && val != null) || _.isObject(key)) {
+            options = val;
+        }
+
+        if (options && _.has(options, 'preventBubble') && options.preventBubble) {
+            delete options.preventBubble;
+        } else {
+            // ensure save is executed from the highest document model.
+            while (obj.parent || (obj.collection && obj.collection.parent)) {
+                obj = obj.parent || obj.collection.parent;
+            }
         }
 
         return Backbone.Model.prototype.save.call(obj, key, val, options);
